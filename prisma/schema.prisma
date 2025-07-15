@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+  studentId     String?   @unique
+  department    String?
+  phoneNumber   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  alerts   Alert[]
+  reports  Report[]
+}
+
+model Alert {
+  id              String      @id @default(cuid())
+  userId          String
+  latitude        Float
+  longitude       Float
+  audioUrl        String?
+  audioTranscript String?
+  urgencyScore    Float       @default(0.5)
+  aiAnalysis      String?
+  status          AlertStatus @default(ACTIVE)
+  blockchainTxId  String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id])
+  notifications Notification[]
+}
+
+model Report {
+  id          String     @id @default(cuid())
+  userId      String?
+  latitude    Float
+  longitude   Float
+  description String
+  category    String
+  severity    Severity   @default(LOW)
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  alertId   String
+  userId    String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  alert Alert @relation(fields: [alertId], references: [id])
+}
+
+model IoTDevice {
+  id          String   @id @default(cuid())
+  deviceId    String   @unique
+  name        String
+  latitude    Float
+  longitude   Float
+  isActive    Boolean  @default(true)
+  lastTrigger DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AlertStatus {
+  ACTIVE
+  RESOLVED
+  FALSE_ALARM
+}
+
+enum ReportStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
