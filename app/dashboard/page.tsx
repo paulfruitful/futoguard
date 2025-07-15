@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth, authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
@@ -9,12 +9,12 @@ import { LocationStatus } from "@/components/dashboard/location-status";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
+  console.log("session", session);
   if (!session) {
     redirect("/auth/signin");
   }
-  console.log("session", session);
 
   // Fetch user's recent alerts
   const userAlerts = await prisma.alert.findMany({

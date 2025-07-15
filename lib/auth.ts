@@ -1,10 +1,16 @@
-import type { NextAuthOptions } from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import CredentialsProvider from "next-auth/providers/credentials"
-import { prisma } from "./prisma"
+// lib/auth.ts
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+import NextAuth from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
+import type { NextAuthConfig } from "next-auth"
+
+export const authConfig: NextAuthConfig = {
+  session: {
+    strategy: "jwt",
+  },
+  pages: {
+    signIn: "/auth/signin",
+  },
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -28,8 +34,6 @@ export const authOptions: NextAuthOptions = {
           const authData = await authRes.json()
           if (!authData.success) return null
 
-          console.log('Auth data = ', authData)
-
           const token = authData.data.jwtToken.token
 
           // Step 2: Fetch student profile
@@ -41,64 +45,51 @@ export const authOptions: NextAuthOptions = {
 
           const profileData = await profileRes.json()
           if (!profileData.success) return null
-          console.log('Profile data = ', profileData)
 
           const { personalData, programmeDetail } = profileData.data
 
-          // Step 3: Create or find local user in your DB
-          // const user = await prisma.user.upsert({
-          //   where: { email: personalData.email },
-          //   update: {
-          //     name: personalData.fullname,
-          //     phoneNumber: personalData.mobileNumber,
-          //     studentId: programmeDetail.matricNumber,
-          //     department: programmeDetail.department,
-          //     image: personalData.passport, // base64 image
-          //   },
-          //   create: {
-          //     name: personalData.fullname,
-          //     email: personalData.email,
-          //     phoneNumber: personalData.mobileNumber,
-          //     studentId: programmeDetail.matricNumber,
-          //     department: programmeDetail.department,
-          //     image: personalData.passport,
-          //     role: "USER",
-          //   },
-          // })
-
           return {
-            id: personalData.id,
-            email: personalData.email,
-            name: personalData.name,
-            role: personalData.role,
+            id: personalData.userId ?? programmeDetail.id?.toString() ?? "no-id",
+            email: personalData.email ?? email,
+            name: personalData.fullname ?? personalData.username ?? "FUTO Student",
+            role: "USER",
+            image: personalData.passport,
           }
         } catch (err) {
           console.error("FUTO auth error:", err)
           return null
         }
-      }
-
+      },
     }),
   ],
-  session: {
-    strategy: "jwt",
-  },
   callbacks: {
-    jwt: async ({ token, user }) => {
+    async jwt({ token, user }) {
       if (user) {
+        token.id = user.id
         token.role = user.role
+        token.name = user.name
+        token.email = user.email
+        token.image = user.image
+      }
+      // Defensive fix to prevent `payload must be object` error
+      if (!token || typeof token !== "object") {
+        return {}
       }
       return token
     },
-    session: async ({ session, token }) => {
+    async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub!
-        session.user.role = token.role as string
+        session.user.id = token.id
+        session.user.role = token.role
+        session.user.name = token.name
+        session.user.email = token.email
+        session.user.image = token.image
       }
       return session
     },
   },
-  pages: {
-    signIn: "/auth/signin",
-  },
+  secret: process.env.AUTH_SECRET,
 }
+
+// Now export standard helpers
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
