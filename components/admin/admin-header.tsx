@@ -35,6 +35,12 @@ export function AdminHeader({ user }: AdminHeaderProps) {
               <BarChart3 className="h-4 w-4" />
               <span>Dashboard</span>
             </Link>
+            <Link href="/iot" className="text-gray-700 hover:text-gray-900">
+              IoT System
+            </Link>
+            <Link href="/alerts" className="text-gray-700 hover:text-gray-900">
+              Alerts
+            </Link>
             <Link href="/dashboard" className="text-gray-700 hover:text-gray-900">
               User View
             </Link>

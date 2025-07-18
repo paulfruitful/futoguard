@@ -1,29 +1,93 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, Users, FileText, TrendingUp, Download } from "lucide-react"
-import { ResponsiveContainer, LineChart } from "recharts"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/hooks/use-toast"
+import { AlertTriangle, Users, FileText, TrendingUp, Download, MapPin, Clock, Volume2, Brain, Shield, Filter } from "lucide-react"
+import { format } from "date-fns"
+import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts"
 
-interface AdminDashboardProps {
-  alerts: any[]
-  reports: any[]
-  users: any[]
-  recentActivity: any[]
-  stats: {
-    totalAlerts: number
-    activeAlerts: number
-    totalReports: number
-    totalUsers: number
-    highUrgencyAlerts: number
-    resolvedAlerts: number
+interface Alert {
+  id: string
+  userId: string
+  latitude: number
+  longitude: number
+  audioTranscript: string
+  audioUrl?: string
+  urgencyScore: number
+  aiAnalysis: string
+  status: string
+  blockchainTxId?: string
+  createdAt: string
+  user: {
+    name: string
   }
 }
 
-export function AdminDashboard({ alerts, reports, users, recentActivity, stats }: AdminDashboardProps) {
+interface Report {
+  id: string
+  userId: string
+  latitude: number
+  longitude: number
+  description: string
+  category: string
+  severity: string
+  status: string
+  aiAnalysis?: string
+  blockchainTxId?: string
+  createdAt: string
+}
+
+type FilterType = 'all' | 'high-risk' | 'blockchain' | 'recent'
+type SeverityFilter = 'all' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+
+export function AdminDashboard() {
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [reports, setReports] = useState<Report[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedTab, setSelectedTab] = useState('overview')
+  const [filter, setFilter] = useState<FilterType>('all')
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const { toast } = useToast() 
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch alerts
+      const alertsResponse = await fetch('/api/alert')
+      if (alertsResponse.ok) {
+        const alertsData = await alertsResponse.json()
+        setAlerts(alertsData.alerts || [])
+      }
+      
+      // Fetch reports
+      const reportsResponse = await fetch('/api/report')
+      if (reportsResponse.ok) {
+        const reportsData = await reportsResponse.json()
+        setReports(reportsData.reports || [])
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch dashboard data",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Prepare chart data
   const alertsByDay = alerts.reduce((acc: any, alert) => {
@@ -43,12 +107,20 @@ export function AdminDashboard({ alerts, reports, users, recentActivity, stats }
     { name: 'Medium', value: alerts.filter(a => a.urgencyScore >= 0.4 && a.urgencyScore < 0.6).length, color: '#ca8a04' },
     { name: 'Low', value: alerts.filter(a => a.urgencyScore < 0.4).length, color: '#16a34a' }
   ]
+  
+  // Calculate stats for dashboard
+  const stats = {
+    totalAlerts: alerts.length,
+    activeAlerts: alerts.filter(a => a.status === 'ACTIVE').length,
+    highUrgencyAlerts: alerts.filter(a => a.urgencyScore >= 0.7).length,
+    totalReports: reports.length,
+    totalUsers: 0 // Will be updated when user data is available
+  }
 
   const exportData = () => {
     const data = {
       alerts,
       reports,
-      users: users.map(u => ({ ...u, _count: undefined })), // Remove sensitive data
       exportDate: new Date().toISOString()
     }
     
@@ -143,4 +215,9 @@ export function AdminDashboard({ alerts, reports, users, recentActivity, stats }
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
-                    <Cartes\
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="alerts" stroke="#3b82f6" activeDot={{ r: 8 }} />

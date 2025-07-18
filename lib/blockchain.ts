@@ -5,6 +5,8 @@ const GUARDIAN_CONTRACT_ABI = [
   "function getAlert(uint256 alertId) external view returns (address, uint256, int256, int256, uint256)",
   "function getAlertCount() external view returns (uint256)",
   "event AlertLogged(uint256 indexed alertId, address indexed sender, uint256 timestamp)",
+  "function logReport(string userId, string reportHash, uint256 urgencyScore, uint256 timestamp) external",
+  "function getReport(uint256 reportId) external view returns (string, string, uint256, uint256, bool)"
 ]
 
 const CONTRACT_ADDRESS = process.env.GUARDIAN_CONTRACT_ADDRESS!
@@ -68,6 +70,64 @@ export class BlockchainService {
     } catch (error) {
       console.error("Error fetching alert count:", error)
       return 0
+    }
+  }
+
+  // Log critical reports to blockchain
+  async logReport(
+    userId: string,
+    reportHash: string,
+    urgencyScore: number
+  ): Promise<string> {
+    try {
+      const tx = await this.contract.logReport(
+        userId,
+        reportHash,
+        Math.floor(urgencyScore * 100), // Convert to integer
+        Math.floor(Date.now() / 1000) // Unix timestamp
+      )
+      
+      await tx.wait()
+      return tx.hash
+    } catch (error) {
+      console.error("Error logging report to blockchain:", error)
+      throw error
+    }
+  }
+
+  // Hash sensitive data for blockchain storage
+  async hashData(data: any): Promise<string> {
+    try {
+      const dataString = JSON.stringify(data)
+      const encoder = new TextEncoder()
+      const dataBuffer = encoder.encode(dataString)
+      
+      // Use Web Crypto API for hashing
+      const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+      
+      return `0x${hashHex}`
+    } catch (error) {
+      console.error("Error hashing data:", error)
+      throw error
+    }
+  }
+
+  // Get report from blockchain
+  async getReport(reportId: string): Promise<any> {
+    try {
+      const result = await this.contract.getReport(reportId)
+      return {
+        userId: result[0],
+        reportHash: result[1],
+        urgencyScore: Number(result[2]) / 100, // Convert back to decimal
+        timestamp: new Date(Number(result[3]) * 1000),
+        verified: result[4]
+      }
+    } catch (error) {
+      console.error("Error getting report from blockchain:", error)
+      throw error
     }
   }
 }

@@ -41,6 +41,12 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
             <Link href="/alerts" className="text-gray-700 hover:text-gray-900">
               Alerts
             </Link>
+            <Link href="/report" className="text-gray-700 hover:text-gray-900">
+              Report
+            </Link>
+            <Link href="/iot" className="text-gray-700 hover:text-gray-900">
+              IoT System
+            </Link>
             {user.role === "ADMIN" && (
               <Link href="/admin" className="text-gray-700 hover:text-gray-900">
                 Admin

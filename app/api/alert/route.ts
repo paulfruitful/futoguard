@@ -12,17 +12,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { latitude, longitude, audioData, audioTranscript } = await request.json()
+    const { latitude, longitude, audioData, audioTranscript, audioUrl, audioBuffer, volume } = await request.json()
 
     if (!latitude || !longitude) {
       return NextResponse.json({ error: "Location required" }, { status: 400 })
     }
 
-    // Analyze threat using AI
-    const analysis = await aiService.analyzeAudioTranscript(audioTranscript || "Emergency alert triggered", {
-      latitude,
-      longitude,
-    })
+    // Prepare audio data for AI analysis
+    let audioFloat32Array: Float32Array | undefined;
+    if (audioBuffer && Array.isArray(audioBuffer)) {
+      audioFloat32Array = new Float32Array(audioBuffer);
+    }
+
+    // Analyze threat using AI with enhanced audio analysis
+    const analysis = await aiService.analyzeAudioTranscript(
+      audioTranscript || "Emergency alert triggered", 
+      { latitude, longitude },
+      audioFloat32Array,
+      volume
+    )
 
     // Create alert in database
     const alert = await prisma.alert.create({
@@ -31,8 +39,12 @@ export async function POST(request: NextRequest) {
         latitude,
         longitude,
         audioTranscript,
+        audioUrl: audioUrl || null,
         urgencyScore: analysis.urgencyScore,
-        aiAnalysis: JSON.stringify(analysis),
+        aiAnalysis: JSON.stringify({
+          ...analysis,
+          audioAnalysis: analysis.audioAnalysis
+        }),
         status: "ACTIVE",
       },
       include: {

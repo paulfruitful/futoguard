@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { auth, authConfig } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 
 export default async function HomePage() {
-  const session = await auth();
+  const session = await getServerSession(authConfig);
   if (session) {
     redirect("/dashboard");
   }
