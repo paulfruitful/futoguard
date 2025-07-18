@@ -76,6 +76,7 @@ export function AnonymousReportForm() {
         body: JSON.stringify({
           ...location,
           ...formData,
+          requiresAiAnalysis: true,
         }),
       })
 

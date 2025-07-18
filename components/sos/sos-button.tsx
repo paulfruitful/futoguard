@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/lib/store"
 import { useToast } from "@/hooks/use-toast"
-import { AlertTriangle, Mic, CheckCircle } from "lucide-react"
+import { AlertTriangle, Mic, CheckCircle, MicOff } from "lucide-react"
+import { AudioHandler } from "@/src/AI/audiohandler"
 
 interface SOSButtonProps {
   userId: string
@@ -15,6 +16,8 @@ export function SOSButton({ userId }: SOSButtonProps) {
   const [countdown, setCountdown] = useState(0)
   const { location, alert, setAlertState, setLocation } = useAppStore()
   const { toast } = useToast()
+  const audioHandlerRef = useRef<AudioHandler | null>(null)
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Get user location
   useEffect(() => {
@@ -67,9 +70,14 @@ export function SOSButton({ userId }: SOSButtonProps) {
     setAlertState({ isRecording: true })
     setCountdown(30) // 30 second recording
 
-    // Start audio recording (simulated)
+    // Initialize audio handler
     try {
-      // In a real app, you would start actual audio recording here
+      if (!audioHandlerRef.current) {
+        audioHandlerRef.current = new AudioHandler()
+      }
+      
+      await audioHandlerRef.current.initialize()
+      
       toast({
         title: "Recording Started",
         description: "Recording audio for 30 seconds...",
@@ -80,11 +88,30 @@ export function SOSButton({ userId }: SOSButtonProps) {
         description: "Unable to start audio recording.",
         variant: "destructive",
       })
+      setAlertState({ isRecording: false })
     }
   }
 
   const handleSendAlert = async () => {
     try {
+      let audioUrl = null
+      let audioBuffer = null
+      let volume = 0
+      
+      // Process audio if recording was active
+      if (audioHandlerRef.current) {
+        const audioBlob = await audioHandlerRef.current.stopRecording()
+        
+        if (audioBlob) {
+          // Convert audio to Float32Array for AI analysis
+          audioBuffer = await audioHandlerRef.current.blobToFloat32Array(audioBlob)
+          volume = audioHandlerRef.current.getCurrentVolume()
+          
+          // Upload audio to Firebase
+          audioUrl = await audioHandlerRef.current.uploadAudioToFirebase(audioBlob, `sos-${Date.now()}`)
+        }
+      }
+      
       const response = await fetch("/api/alert", {
         method: "POST",
         headers: {
@@ -94,6 +121,9 @@ export function SOSButton({ userId }: SOSButtonProps) {
           latitude: location.latitude,
           longitude: location.longitude,
           audioTranscript: "Emergency alert - audio recording completed",
+          audioUrl,
+          audioBuffer: audioBuffer ? Array.from(audioBuffer) : null,
+          volume,
         }),
       })
 
@@ -116,10 +146,15 @@ export function SOSButton({ userId }: SOSButtonProps) {
     } catch (error) {
       toast({
         title: "Alert Failed",
-        description: "Unable to send alert. Please try again or call security directly.",
+        description: error instanceof Error ? error.message : "Unable to send alert. Please try again or call security directly.",
         variant: "destructive",
       })
       setAlertState({ isRecording: false })
+    } finally {
+      // Cleanup audio handler
+      if (audioHandlerRef.current) {
+        audioHandlerRef.current.cleanup()
+      }
     }
   }
 

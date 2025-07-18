@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { auth, authOptions } from "@/lib/auth";
+import { auth, authConfig } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,11 +13,11 @@ import { Shield, Smartphone, Brain, LinkIcon } from "lucide-react";
 import Link from "next/link";
 
 export default async function HomePage() {
-  const session = await auth();
+  const session = await getServerSession(authConfig);
   if (session) {
     redirect("/dashboard");
   }
-
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
       {/* Header */}
