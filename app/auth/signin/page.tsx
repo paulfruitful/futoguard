@@ -1,5 +1,3 @@
-import { getServerSession } from "next-auth";
-import { auth, authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { SignInForm } from "@/components/auth/signin-form";
 import {
@@ -11,12 +9,21 @@ import {
 } from "@/components/ui/card";
 import { Shield } from "lucide-react";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+// import { auth } from "@/auth";
 
 export default async function SignInPage() {
-  const session = await auth();
-  if (session) {
-    redirect("/dashboard");
-  }
+  // const session = await auth();
+  // if (session) {
+  //   redirect("/dashboard");
+  // }
+
+  // try {
+  //   const users = await prisma.user.findMany();
+  //   console.log("users", users);
+  // } catch (error) {
+  //   console.log("Error", error);
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">

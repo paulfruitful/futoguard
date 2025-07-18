@@ -1,5 +1,4 @@
 import { getServerSession } from "next-auth";
-import { auth, authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Shield, Smartphone, Brain, LinkIcon } from "lucide-react";
 import Link from "next/link";
+import { auth } from "@/auth";
 
 export default async function HomePage() {
   const session = await auth();
