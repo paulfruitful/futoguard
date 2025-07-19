@@ -1,15 +1,14 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import { prisma } from "@/lib/prisma"
-import { AdminDashboard } from "@/components/admin/admin-dashboard"
-import { AdminHeader } from "@/components/admin/admin-header"
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { AdminHeader } from "@/components/admin/admin-header";
+import { auth } from "@/auth";
 
 export default async function AdminPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth();
 
-  if (!session || session.user.role !== "ADMIN") {
-    redirect("/dashboard")
+  if (!session?.user?.role || session.user.role !== "ADMIN") {
+    redirect("/dashboard");
   }
 
   // Fetch comprehensive admin data
@@ -58,7 +57,7 @@ export default async function AdminPage() {
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
-  ])
+  ]);
 
   const stats = {
     totalAlerts: alerts.length,
@@ -67,15 +66,21 @@ export default async function AdminPage() {
     totalUsers: users.length,
     highUrgencyAlerts: alerts.filter((a) => a.urgencyScore > 0.7).length,
     resolvedAlerts: alerts.filter((a) => a.status === "RESOLVED").length,
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminHeader user={session.user} />
 
       <main className="container mx-auto px-4 py-6">
-        <AdminDashboard alerts={alerts} reports={reports} users={users} recentActivity={recentActivity} stats={stats} />
+        <AdminDashboard
+          alerts={alerts}
+          reports={reports}
+          users={users}
+          recentActivity={recentActivity}
+          stats={stats}
+        />
       </main>
     </div>
-  )
+  );
 }
