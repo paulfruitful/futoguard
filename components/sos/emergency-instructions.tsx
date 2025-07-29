@@ -1,12 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertTriangle, Phone, Users, MapPin } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, Phone, Users, MapPin } from "lucide-react";
 
 export function EmergencyInstructions() {
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-red-600">
+          <CardTitle className="flex flex-col text-center items-center space-x-2 text-red-600">
             <AlertTriangle className="h-5 w-5" />
             <span>What Happens When You Press SOS</span>
           </CardTitle>
@@ -18,7 +18,8 @@ export function EmergencyInstructions() {
                 1
               </span>
               <div>
-                <strong>Location Captured:</strong> Your GPS coordinates are automatically recorded
+                <strong>Location Captured:</strong> Your GPS coordinates are
+                automatically recorded
               </div>
             </li>
             <li className="flex items-start space-x-3">
@@ -26,7 +27,8 @@ export function EmergencyInstructions() {
                 2
               </span>
               <div>
-                <strong>Audio Recording:</strong> 30-second audio clip is recorded for context
+                <strong>Audio Recording:</strong> 30-second audio clip is
+                recorded for context
               </div>
             </li>
             <li className="flex items-start space-x-3">
@@ -34,7 +36,8 @@ export function EmergencyInstructions() {
                 3
               </span>
               <div>
-                <strong>AI Analysis:</strong> Threat level is assessed automatically
+                <strong>AI Analysis:</strong> Threat level is assessed
+                automatically
               </div>
             </li>
             <li className="flex items-start space-x-3">
@@ -42,7 +45,17 @@ export function EmergencyInstructions() {
                 4
               </span>
               <div>
-                <strong>Instant Alerts:</strong> Nearby users and security are notified immediately
+                <strong>Instant Alerts:</strong> Nearby users and security are
+                notified immediately
+              </div>
+            </li>
+            <li className="flex items-start space-x-3">
+              <span className="bg-red-100 text-red-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                5
+              </span>
+              <div>
+                <strong>Street Alarm:</strong> If case is found critical ,
+                street alarms are triggered to notify the neigbourhood
               </div>
             </li>
           </ol>
@@ -75,5 +88,5 @@ export function EmergencyInstructions() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

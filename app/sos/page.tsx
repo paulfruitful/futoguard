@@ -6,6 +6,8 @@ import { AlertTriangle, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
+import { MobileHeader } from "@/components/mobile-header";
+import SituationSelection from "@/components/sos/situation-selection";
 
 export default async function SOSPage() {
   const session = await auth();
@@ -16,28 +18,15 @@ export default async function SOSPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-100 to-red-50">
-      <header className="bg-white border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link
-            href="/dashboard"
-            className="text-lg font-semibold text-gray-900"
-          >
-            ←
-          </Link>
-          <div className="flex items-center space-x-2 text-red-600">
-            <AlertTriangle className="h-5 w-5" />
-            <span className="font-medium">Emergency Mode</span>
-          </div>
-        </div>
-      </header>
+      <MobileHeader title="Emergency SOS" showBack />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-20 py-8">
         <div className="max-w-2xl mx-auto space-y-8">
           {/* Emergency Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Emergency Alert
-            </h1>
+            <h2 className="text-xl font-semibold mb-2">
+              Emergency Help Needed?
+            </h2>
             <p className="text-gray-600">
               Press the button below if you need immediate assistance
             </p>
@@ -47,21 +36,22 @@ export default async function SOSPage() {
           <div className="flex justify-center">
             <SOSButton userId={session.user.id} />
           </div>
+          <SituationSelection />
 
           {/* Emergency Instructions */}
           <EmergencyInstructions />
 
           {/* Quick Contact Cards */}
           <div className="grid md:grid-cols-2 gap-4">
-            <Card className="border-red-200">
+            <Card className="border-red-200 flex flex-col justify-center text-center items-center ">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-2 text-red-600">
+                <CardTitle className="flex justify-center text-center items-center space-x-2 text-red-600">
                   <Phone className="h-5 w-5" />
                   <span>Campus Security</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold mb-2">+234-XXX-XXXX</p>
+                <p className="text-2xl font-bold mb-2">+234-816-3810-804</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -72,7 +62,7 @@ export default async function SOSPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-red-200">
+            <Card className="border-red-200 flex flex-col justify-center text-center items-center ">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center space-x-2 text-red-600">
                   <MapPin className="h-5 w-5" />
@@ -104,7 +94,6 @@ export default async function SOSPage() {
                 <li>• Stay calm and move to a safe location if possible</li>
                 <li>• Keep your phone charged and accessible</li>
                 <li>• Follow instructions from security personnel</li>
-                <li>• Do not use elevators during emergencies</li>
                 <li>• Help others if you can do so safely</li>
               </ul>
             </CardContent>

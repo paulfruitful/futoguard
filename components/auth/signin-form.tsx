@@ -40,7 +40,7 @@ export function SignInForm() {
           title: "Welcome to FUTO Guardian",
           description: "You have successfully signed in.",
         });
-        // router.push("/dashboard");
+        router.push("/dashboard");
       }
     } catch (error) {
       toast({

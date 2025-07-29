@@ -2,6 +2,7 @@
 
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { upsertFutoUser } from "./lib/actions";
 // import type { NextAuthConfig } from "next-auth"
 
 export const authConfig = {
@@ -35,8 +36,10 @@ export const authConfig = {
           );
 
           const authData = await authRes.json();
+          console.log("Authentication passed -->:", authData.success);
           if (!authData.success) return null;
 
+          console.log("User validated by futo portal");
           const token = authData.data.jwtToken.token;
 
           // Step 2: Fetch student profile
@@ -52,16 +55,17 @@ export const authConfig = {
           const profileData = await profileRes.json();
           if (!profileData.success) return null;
 
+          console.log("Profile data gotten");
           const { personalData, programmeDetail } = profileData.data;
-          //   const user = await upsertFutoUser(personalData);
+          const user = await upsertFutoUser(profileData.data);
           return {
-            id:
-              personalData.userId ?? programmeDetail.id?.toString() ?? "no-id",
-            email: personalData.email ?? email,
-            name:
-              personalData.fullname ?? personalData.username ?? "FUTO Student",
+            id: user.id,
+            email: user.email,
+            name: user.fullname,
+            username: user.matricNumber,
             role: "USER",
-            image: personalData.passport,
+            image: user.passport,
+            mobileNumber: user.mobileNumber,
           };
         } catch (err) {
           console.error("FUTO auth error:", err);
@@ -76,8 +80,10 @@ export const authConfig = {
         token.id = user.id;
         token.role = user.role;
         token.name = user.name;
+        token.username = user.username;
         token.email = user.email;
         token.image = user.image;
+        token.mobileNumber = user.mobileNumber;
       }
       // Defensive fix to prevent `payload must be object` error
       if (!token || typeof token !== "object") {
@@ -90,8 +96,10 @@ export const authConfig = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.name = token.name;
+        session.user.username = token.username;
         session.user.email = token.email;
         session.user.image = token.image;
+        session.user.mobileNumber = token.mobileNumber;
       }
       return session;
     },

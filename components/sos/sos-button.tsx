@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { useAppStore } from "@/lib/store"
-import { useToast } from "@/hooks/use-toast"
-import { AlertTriangle, Mic, CheckCircle, MicOff } from "lucide-react"
-import { AudioHandler } from "@/src/AI/audiohandler"
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/lib/store";
+import { useToast } from "@/hooks/use-toast";
+import { AlertTriangle, Mic, CheckCircle, MicOff } from "lucide-react";
+import { AudioHandler } from "@/src/AI/audiohandler";
 
 interface SOSButtonProps {
-  userId: string
+  userId: string;
 }
 
 export function SOSButton({ userId }: SOSButtonProps) {
-  const [isPressed, setIsPressed] = useState(false)
-  const [countdown, setCountdown] = useState(0)
-  const { location, alert, setAlertState, setLocation } = useAppStore()
-  const { toast } = useToast()
-  const audioHandlerRef = useRef<AudioHandler | null>(null)
-  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [isPressed, setIsPressed] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const { location, alert, setAlertState, setLocation } = useAppStore();
+  const { toast } = useToast();
+  const audioHandlerRef = useRef<AudioHandler | null>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get user location
   useEffect(() => {
@@ -29,32 +29,33 @@ export function SOSButton({ userId }: SOSButtonProps) {
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy,
             timestamp: Date.now(),
-          })
+          });
         },
         (error) => {
           toast({
             title: "Location Error",
-            description: "Unable to get your location. Please enable location services.",
+            description:
+              "Unable to get your location. Please enable location services.",
             variant: "destructive",
-          })
-        },
-      )
+          });
+        }
+      );
     }
-  }, [setLocation, toast])
+  }, [setLocation, toast]);
 
   // Recording countdown
   useEffect(() => {
-    let interval: NodeJS.Timeout
+    let interval: NodeJS.Timeout;
     if (alert.isRecording && countdown > 0) {
       interval = setInterval(() => {
-        setCountdown((prev) => prev - 1)
-        setAlertState({ recordingDuration: 30 - countdown })
-      }, 1000)
+        setCountdown((prev) => prev - 1);
+        setAlertState({ recordingDuration: 30 - countdown });
+      }, 1000);
     } else if (alert.isRecording && countdown === 0) {
-      handleSendAlert()
+      handleSendAlert();
     }
-    return () => clearInterval(interval)
-  }, [alert.isRecording, countdown])
+    return () => clearInterval(interval);
+  }, [alert.isRecording, countdown]);
 
   const handleSOSPress = async () => {
     if (!location.latitude || !location.longitude) {
@@ -62,56 +63,61 @@ export function SOSButton({ userId }: SOSButtonProps) {
         title: "Location Required",
         description: "Please enable location services to send an alert.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsPressed(true)
-    setAlertState({ isRecording: true })
-    setCountdown(30) // 30 second recording
+    setIsPressed(true);
+    setAlertState({ isRecording: true });
+    setCountdown(30); // 30 second recording
 
     // Initialize audio handler
     try {
       if (!audioHandlerRef.current) {
-        audioHandlerRef.current = new AudioHandler()
+        audioHandlerRef.current = new AudioHandler();
       }
-      
-      await audioHandlerRef.current.initialize()
-      
+
+      await audioHandlerRef.current.initialize();
+
       toast({
         title: "Recording Started",
         description: "Recording audio for 30 seconds...",
-      })
+      });
     } catch (error) {
       toast({
         title: "Recording Error",
         description: "Unable to start audio recording.",
         variant: "destructive",
-      })
-      setAlertState({ isRecording: false })
+      });
+      setAlertState({ isRecording: false });
     }
-  }
+  };
 
   const handleSendAlert = async () => {
     try {
-      let audioUrl = null
-      let audioBuffer = null
-      let volume = 0
-      
+      let audioUrl = null;
+      let audioBuffer = null;
+      let volume = 0;
+
       // Process audio if recording was active
       if (audioHandlerRef.current) {
-        const audioBlob = await audioHandlerRef.current.stopRecording()
-        
+        const audioBlob = await audioHandlerRef.current.stopRecording();
+
         if (audioBlob) {
           // Convert audio to Float32Array for AI analysis
-          audioBuffer = await audioHandlerRef.current.blobToFloat32Array(audioBlob)
-          volume = audioHandlerRef.current.getCurrentVolume()
-          
+          audioBuffer = await audioHandlerRef.current.blobToFloat32Array(
+            audioBlob
+          );
+          volume = audioHandlerRef.current.getCurrentVolume();
+
           // Upload audio to Firebase
-          audioUrl = await audioHandlerRef.current.uploadAudioToFirebase(audioBlob, `sos-${Date.now()}`)
+          audioUrl = await audioHandlerRef.current.uploadAudioToFirebase(
+            audioBlob,
+            `sos-${Date.now()}`
+          );
         }
       }
-      
+
       const response = await fetch("/api/alert", {
         method: "POST",
         headers: {
@@ -125,38 +131,42 @@ export function SOSButton({ userId }: SOSButtonProps) {
           audioBuffer: audioBuffer ? Array.from(audioBuffer) : null,
           volume,
         }),
-      })
+      });
 
       if (response.ok) {
-        const result = await response.json()
+        const result = await response.json();
         setAlertState({
           alertSent: true,
           isRecording: false,
           currentAlert: result.alert,
-        })
+        });
 
         toast({
           title: "Alert Sent Successfully",
-          description: "Emergency services and nearby users have been notified.",
+          description:
+            "Emergency services and nearby users have been notified.",
           variant: "default",
-        })
+        });
       } else {
-        throw new Error("Failed to send alert")
+        throw new Error("Failed to send alert");
       }
     } catch (error) {
       toast({
         title: "Alert Failed",
-        description: error instanceof Error ? error.message : "Unable to send alert. Please try again or call security directly.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unable to send alert. Please try again or call security directly.",
         variant: "destructive",
-      })
-      setAlertState({ isRecording: false })
+      });
+      setAlertState({ isRecording: false });
     } finally {
       // Cleanup audio handler
       if (audioHandlerRef.current) {
-        audioHandlerRef.current.cleanup()
+        audioHandlerRef.current.cleanup();
       }
     }
-  }
+  };
 
   if (alert.alertSent) {
     return (
@@ -170,14 +180,17 @@ export function SOSButton({ userId }: SOSButtonProps) {
           {alert.currentAlert && (
             <div className="mt-4 p-4 bg-green-50 rounded-lg">
               <p className="text-sm text-green-700">
-                Urgency Level: {Math.round(alert.currentAlert.urgencyScore * 100)}%
+                Urgency Level:{" "}
+                {Math.round(alert.currentAlert.urgencyScore * 100)}%
               </p>
-              <p className="text-sm text-green-700">Category: {alert.currentAlert.category}</p>
+              <p className="text-sm text-green-700">
+                Category: {alert.currentAlert.category}
+              </p>
             </div>
           )}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -185,14 +198,15 @@ export function SOSButton({ userId }: SOSButtonProps) {
       <Button
         size="lg"
         className={`w-48 h-48 rounded-full text-white font-bold text-xl transition-all duration-200 ${
-          isPressed ? "bg-red-700 scale-95 shadow-inner" : "bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl"
+          isPressed
+            ? "bg-red-700 scale-95 shadow-inner"
+            : "bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl"
         }`}
         onClick={handleSOSPress}
         disabled={alert.isRecording}
       >
         <div className="flex flex-col items-center space-y-2">
-          <AlertTriangle className="h-12 w-12" />
-          <span>HELP ME</span>
+          <span className="text-3xl">SOS</span>
           {alert.isRecording && (
             <div className="flex items-center space-x-1">
               <Mic className="h-4 w-4 animate-pulse" />
@@ -218,9 +232,9 @@ export function SOSButton({ userId }: SOSButtonProps) {
       )}
 
       <p className="text-gray-600 text-sm max-w-md mx-auto">
-        Press and hold the button to send an emergency alert. Your location and a 30-second audio recording will be sent
-        to nearby users and security personnel.
+        Your location and a 30-second audio recording will be sent to nearby
+        users and security personnel.
       </p>
     </div>
-  )
+  );
 }

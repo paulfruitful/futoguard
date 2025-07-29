@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "../styles/globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
+import { SideNav } from "@/components/SidebarNav";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,6 +29,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <ErrorBoundary>
           <Providers>
+            <SideNav />
+
             {children}
             <Toaster />
           </Providers>
