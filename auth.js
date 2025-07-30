@@ -61,11 +61,12 @@ export const authConfig = {
           return {
             id: user.id,
             email: user.email,
-            name: user.fullname,
+            name: user.displayName || user.fullname,
             username: user.matricNumber,
             role: "USER",
-            image: user.passport,
-            mobileNumber: user.mobileNumber,
+            image: user.displayPicture || user.passport,
+            mobileNumber: user.displayMobileNumber || user.mobileNumber,
+            address: user.displayAddress || "Address not provided",
           };
         } catch (err) {
           console.error("FUTO auth error:", err);
@@ -84,6 +85,7 @@ export const authConfig = {
         token.email = user.email;
         token.image = user.image;
         token.mobileNumber = user.mobileNumber;
+        token.address = user.address;
       }
       // Defensive fix to prevent `payload must be object` error
       if (!token || typeof token !== "object") {
@@ -100,6 +102,7 @@ export const authConfig = {
         session.user.email = token.email;
         session.user.image = token.image;
         session.user.mobileNumber = token.mobileNumber;
+        session.user.address = token.address;
       }
       return session;
     },

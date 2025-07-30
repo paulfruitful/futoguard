@@ -21,6 +21,10 @@ interface FutoUserData {
     modeOfEntry?: string;
     id?: string;
     username?: string;
+    displayName?: string;
+    displayPicture?: string;
+    displaMobileNumber?: string;
+    displayAddress?: string;
 }
 
 interface ApiResponseData {
@@ -82,3 +86,44 @@ export const upsertFutoUser = async (data: ApiResponseData) => {
         throw new Error("Failed to upsert user.");
     }
 };
+
+
+interface UpdateUserProfileParams {
+    userId: string;
+    displayName?: string;
+    phoneNumber?: string;
+    address?: string;
+    profilePicture?: string | null;
+}
+
+export async function updateUserProfile({
+    userId,
+    displayName,
+    phoneNumber,
+    address,
+    profilePicture,
+}: UpdateUserProfileParams) {
+    try {
+        console.log('Updating user profile:', userId)
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                ...(displayName && { displayName: displayName }), // Only update if provided
+                ...(phoneNumber && { displayMobileNumber: phoneNumber }),
+                ...(address && { displayAddress: address }),
+                ...(profilePicture !== undefined && { displayPicture: profilePicture }),
+            },
+        });
+        console.log('User profile updated successfully:', updatedUser);
+        return {
+            success: true,
+            data: updatedUser,
+        };
+    } catch (error) {
+        console.error("Prisma update error:", error);
+        return {
+            success: false,
+            message: "Failed to update profile. User may not exist.",
+        };
+    }
+}

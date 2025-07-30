@@ -35,24 +35,30 @@ model Session {
 }
 
 model User {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   fullname       String?
-  username       String?  @unique
-  email          String   @unique
+  username       String? @unique
+  email          String  @unique
   gender         String?
   dateOfBirth    String?
   state          String?
   mobileNumber   String?
   religion       String?
   passport       String?
-  role           Role     @default(USER)
-  matricNumber   String?  @unique
+  role           Role    @default(USER)
+  matricNumber   String? @unique
   department     String?
   level          String?
   modeOfEntry    String?
   contactAddress String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+
+  displayName         String?
+  displayPicture      String?
+  displayMobileNumber String?
+  displayAddress      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   accounts Account[]
   sessions Session[]

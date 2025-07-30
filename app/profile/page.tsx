@@ -7,6 +7,7 @@ import { LogoutDialog } from "@/components/logout-dialog";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -22,27 +23,28 @@ export default async function ProfilePage() {
       <div className="p-4 space-y-6 pt-20">
         {/* Profile Header */}
         <Card>
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-6 flex">
             <Avatar className="w-20 h-20 mx-auto mb-4">
-              {user?.image ? (
+              {user?.image && (
                 <img src={user.image} alt={user.name || "User Avatar"} />
-              ) : (
-                <Shield className="h-8 w-8 text-gray-500" />
               )}
               <AvatarFallback>
                 {user?.name?.charAt(0)?.toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
-
-            <h2 className="text-xl font-semibold mb-1">{user?.name}</h2>
-            <p className="text-gray-600 mb-1">{user?.email}</p>
-            <p className="text-gray-600 mb-4">{user?.mobileNumber}</p>
-            <Button
-              variant="outline"
-              className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent"
-            >
-              Edit Profile
-            </Button>
+            <div>
+              <h2 className="text-xl font-semibold mb-1">{user?.name}</h2>
+              <p className="text-gray-600 mb-1">{user?.email}</p>
+              <p className="text-gray-600 mb-4">{user?.mobileNumber}</p>
+              <Link href={"/profile/edit"}>
+                <Button
+                  variant="outline"
+                  className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent"
+                >
+                  Edit Profile
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
 
@@ -67,7 +69,6 @@ export default async function ProfilePage() {
           <LogoutDialog>
             <Button
               variant="ghost"
-              //   onClick={() => signOut({ callbackUrl: "/" })}
               className="w-full justify-start h-12 px-4 text-red-500"
             >
               <LogOut className="w-5 h-5 mr-3" />
