@@ -24,7 +24,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Shield className="h-8 w-8 text-red-600" />
-            <h1 className="text-2xl font-bold text-gray-900">FUTO Guardian</h1>
+            <h1 className="text-2xl font-bold text-gray-900">FUTO Guard</h1>
           </div>
           <div className="space-x-4">
             <Button variant="outline" asChild>
