@@ -57,6 +57,10 @@ model User {
   displayMobileNumber String?
   displayAddress      String?
 
+  latitude  Float?
+  longitude Float?
+  lastSeen  DateTime @default(now())
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -64,24 +68,152 @@ model User {
   sessions Session[]
   alerts   Alert[]
   reports  Report[]
+
+  chatParticipants ChatParticipant[]
+  sentMessages     Message[]
+
+  // Emergency contacts
+  emergencyContacts EmergencyContact[] @relation("UserEmergencyContacts")
+  contactOf         EmergencyContact[] @relation("EmergencyContactUser")
+
+  // Alerts
+  // sentAlerts     Alert[] @relation("AlertSender")
+  // receivedAlerts Alert[] @relation("AlertReceiver")
+
+  @@map("users")
+}
+
+model Chat {
+  id          String   @id @default(cuid())
+  type        ChatType @default(DIRECT)
+  name        String? // For group chats
+  description String?
+  avatar      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  participants ChatParticipant[]
+  messages     Message[]
+
+  @@map("chats")
+}
+
+model ChatParticipant {
+  id       String    @id @default(cuid())
+  userId   String
+  chatId   String
+  role     ChatRole  @default(MEMBER)
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chatId])
+  @@map("chat_participants")
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  content   String
+  type      MessageType @default(TEXT)
+  chatId    String
+  senderId  String
+  replyToId String?
+  editedAt  DateTime?
+  deletedAt DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  chat    Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender  User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo Message?  @relation("MessageReply", fields: [replyToId], references: [id])
+  replies Message[] @relation("MessageReply")
+
+  readReceipts MessageReadReceipt[]
+  reactions    MessageReaction[]
+  attachments  MessageAttachment[]
+
+  @@map("messages")
+}
+
+model MessageReadReceipt {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@map("message_read_receipts")
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("message_reactions")
+}
+
+model MessageAttachment {
+  id        String         @id @default(cuid())
+  messageId String
+  type      AttachmentType
+  url       String
+  filename  String
+  size      Int?
+  mimeType  String?
+  createdAt DateTime       @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("message_attachments")
+}
+
+model EmergencyContact {
+  id        String   @id @default(cuid())
+  userId    String
+  contactId String
+  createdAt DateTime @default(now())
+
+  user    User @relation("UserEmergencyContacts", fields: [userId], references: [id], onDelete: Cascade)
+  contact User @relation("EmergencyContactUser", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contactId])
+  @@map("emergency_contacts")
 }
 
 model Alert {
   id              String      @id @default(cuid())
+  type            AlertType
   userId          String
+  location        String?
   latitude        Float
   longitude       Float
   audioUrl        String?
   audioTranscript String?
   urgencyScore    Float       @default(0.5)
   aiAnalysis      String?
+  description     String?
   status          AlertStatus @default(ACTIVE)
+  priority        Priority    @default(MEDIUM)
   blockchainTxId  String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
 
   user          User           @relation(fields: [userId], references: [id])
   notifications Notification[]
+
+  @@map("alerts")
 }
 
 model Report {
@@ -129,7 +261,9 @@ enum Role {
 
 enum AlertStatus {
   ACTIVE
+  ACKNOWLEDGED
   RESOLVED
+  CANCELLED
   FALSE_ALARM
 }
 
@@ -140,6 +274,69 @@ enum ReportStatus {
 }
 
 enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ChatType {
+  DIRECT
+  GROUP
+  EMERGENCY
+}
+
+enum ChatRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+  LOCATION
+  SYSTEM
+}
+
+enum AttachmentType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  OTHER
+}
+
+enum AlertType {
+  EMERGENCY
+  SECURITY
+  MEDICAL
+  FIRE
+  ROBBERY
+  ACCIDENT
+  OTHER
+}
+
+enum IncidentType {
+  ROBBERY
+  ACCIDENT
+  MEDICAL
+  FIRE
+  SECURITY
+  OTHER
+}
+
+enum IncidentStatus {
+  REPORTED
+  INVESTIGATING
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
   LOW
   MEDIUM
   HIGH

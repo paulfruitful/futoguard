@@ -5,6 +5,8 @@ import "../styles/globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
 import { SideNav } from "@/components/SidebarNav";
+import { BottomNavigation } from "@/components/bottom-navigation";
+// import "leaflet/dist/leaflet.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,6 +35,7 @@ export default function RootLayout({
 
             {children}
             <Toaster />
+            <BottomNavigation />
           </Providers>
         </ErrorBoundary>
       </body>

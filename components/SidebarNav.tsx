@@ -18,9 +18,10 @@ import {
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
-  { name: "Mapping", href: "/mapping", icon: Map },
+  { name: "Map", href: "/map", icon: Map },
   { name: "Feeds", href: "/feeds", icon: Rss },
   { name: "Alerts", href: "/alerts", icon: AlertTriangle },
+  { name: "Users", href: "/users", icon: Users },
   { name: "Contacts", href: "/contacts", icon: Users },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },

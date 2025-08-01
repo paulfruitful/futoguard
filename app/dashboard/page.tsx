@@ -21,7 +21,7 @@ export default async function DashboardPage() {
       {/* <StatusBar /> */}
       <MobileHeader title="Dashboard" />
 
-      <div className="p-4 pt-20 space-y-6">
+      <div className="p-4 pt-20 pb-20 space-y-6">
         {/* Alert Statistics */}
         <Card>
           <CardContent className="p-6">

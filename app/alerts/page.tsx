@@ -1,167 +1,106 @@
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { AlertsMap } from "@/components/alerts/alerts-map";
-import { AlertsList } from "@/components/alerts/alerts-list";
-import { AlertsFilters } from "@/components/alerts/alerts-filters";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Link from "next/link";
-import { auth } from "@/auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Trash2, MapPin, Clock } from "lucide-react";
+import { MobileHeader } from "@/components/mobile-header";
+import { BottomNavigation } from "@/components/bottom-navigation";
+// import { BottomNavigation } from "@/components/bottom-navigation"
 
-export default async function AlertsPage() {
-  const session = await auth();
-
-  if (!session) {
-    redirect("/auth/signin");
-  }
-
-  // Fetch recent alerts
-  // const alerts = await prisma.alert.findMany({
-  //   include: {
-  //     user: {
-  //       select: { name: true, id: true },
-  //     },
-  //   },
-  //   orderBy: { createdAt: "desc" },
-  //   take: 50,
-  // });
-
-  const alerts = [
-    {
-      id: "alert_001",
-      userId: "user_01",
-      latitude: 5.3841,
-      longitude: 6.9984,
-      audioUrl: "https://example.com/audio/alert1.mp3",
-      audioTranscript: "Help! I'm being followed.",
-      urgencyScore: 0.92,
-      aiAnalysis: "High stress in voice, background sounds suggest crowd.",
-      status: "ACTIVE",
-      blockchainTxId: "0xabc123txid001",
-      createdAt: "2025-07-12T10:00:00.000Z",
-      updatedAt: "2025-07-12T10:00:30.000Z",
+const alerts = [
+  {
+    id: 1,
+    user: {
+      name: "Brian Osuji",
+      avatar: "/placeholder.svg?height=50&width=50",
     },
-    {
-      id: "alert_002",
-      userId: "2F1E2495-01A3-4474-BDA0-CE51A7263ACE",
-      latitude: 5.386,
-      longitude: 6.9975,
-      audioUrl: "https://example.com/audio/alert2.mp3",
-      audioTranscript: "There’s someone suspicious near Hall 3.",
-      urgencyScore: 0.75,
-      aiAnalysis: "Moderate risk, tone indicates caution but no panic.",
-      status: "ACTIVE",
-      blockchainTxId: "0xabc123txid002",
-      createdAt: "2025-07-12T10:02:00.000Z",
-      updatedAt: "2025-07-12T10:02:20.000Z",
-    },
-    {
-      id: "alert_003",
-      userId: "user_03",
-      latitude: 5.3825,
-      longitude: 6.9942,
-      audioUrl: "https://example.com/audio/alert3.mp3",
-      audioTranscript: "Fight broke out near the school gate.",
-      urgencyScore: 0.85,
-      aiAnalysis: "Raised voices and crowd detected, probable conflict.",
-      status: "RESOLVED",
-      blockchainTxId: "0xabc123txid003",
-      createdAt: "2025-07-12T09:58:00.000Z",
-      updatedAt: "2025-07-12T10:03:00.000Z",
-    },
-    {
-      id: "alert_004",
-      userId: "user_04",
-      latitude: 5.385,
-      longitude: 6.996,
-      audioUrl: "https://example.com/audio/alert4.mp3",
-      audioTranscript: "My bag was just snatched at Hostel A!",
-      urgencyScore: 0.88,
-      aiAnalysis: "High alert: panic in voice and sudden movements.",
-      status: "ACTIVE",
-      blockchainTxId: "0xabc123txid004",
-      createdAt: "2025-07-12T10:05:00.000Z",
-      updatedAt: "2025-07-12T10:05:15.000Z",
-    },
-    {
-      id: "alert_005",
-      userId: "2F1E2495-01A3-4474-BDA0-CE51A7263ACE",
-      latitude: 5.3811,
-      longitude: 6.9955,
-      audioUrl: "https://example.com/audio/alert5.mp3",
-      audioTranscript: "I’m injured and need help at the lab.",
-      urgencyScore: 0.95,
-      aiAnalysis: "Critical: pain and urgency detected in speech.",
-      status: "ACTIVE",
-      blockchainTxId: "0xabc123txid005",
-      createdAt: "2025-07-12T10:07:00.000Z",
-      updatedAt: "2025-07-12T10:07:25.000Z",
-    },
-  ];
+    message: "Alert sent out to emergency contacts",
+    location: "Esioboro",
+    time: "8:00 pm",
+    status: "active",
+  },
+  // Add more alerts as needed
+];
 
-  // Filter alerts based on user role
-  const visibleAlerts =
-    session.user.role === "ADMIN"
-      ? alerts
-      : alerts.filter(
-          (alert) =>
-            alert.userId === session.user.id ||
-            alert.createdAt > new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours for others
-        );
-
+export default function AlertsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">
-            Campus Alerts
-          </h1>
-          <div className="flex justify-between items-center">
-            <div>
-              <Link
-                href="/dashboard"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                ←
-              </Link>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <MobileHeader title="Alerts" />
+
+      <div className="p-4 space-y-4 pt-20">
+        {alerts.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🔔</span>
             </div>
-            <AlertsFilters />
+            <h3 className="text-lg font-semibold mb-2">No Alerts</h3>
+            <p className="text-gray-600">
+              You have no active alerts at the moment
+            </p>
           </div>
-        </div>
-      </header>
+        ) : (
+          alerts.map((alert) => (
+            <Card key={alert.id} className="relative">
+              <CardContent className="p-4">
+                {/* Delete Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-8 w-8 text-gray-400 hover:text-red-500"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
 
-      <main className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="list" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="list">List View</TabsTrigger>
-            <TabsTrigger value="map">Map View</TabsTrigger>
-          </TabsList>
+                <div className="flex items-start space-x-3">
+                  {/* User Avatar */}
+                  <Avatar className="w-12 h-12 mt-1">
+                    <AvatarImage
+                      src={alert.user.avatar || "/placeholder.svg"}
+                    />
+                    <AvatarFallback>
+                      {alert.user.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
 
-          <TabsContent value="list" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Alerts ({visibleAlerts.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AlertsList alerts={visibleAlerts} />
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  {/* Alert Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      {alert.user.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {alert.message}
+                    </p>
 
-          <TabsContent value="map" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Alert Locations</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="h-[600px]">
-                  <AlertsMap alerts={visibleAlerts} />
+                    {/* Location and Time */}
+                    <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        <span>{alert.location}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        <span>{alert.time}</span>
+                      </div>
+                    </div>
+
+                    {/* Respond Button */}
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        className="bg-red-500 hover:bg-red-600 px-6"
+                      >
+                        Respond
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
+          ))
+        )}
+      </div>
     </div>
   );
 }
