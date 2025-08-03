@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Map, Rss, AlertTriangle, Phone } from "lucide-react";
+import {
+  Home,
+  Map,
+  Rss,
+  AlertTriangle,
+  Phone,
+  MessageCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -10,7 +17,7 @@ const navigation = [
   { name: "Map", href: "/map", icon: Map },
   { name: "SOS", href: "/sos", icon: AlertTriangle, isEmergency: true },
   { name: "Feed", href: "/feeds", icon: Rss },
-  { name: "Alerts", href: "/alerts", icon: AlertTriangle },
+  { name: "Chats", href: "/chats", icon: MessageCircle },
 ];
 
 export function BottomNavigation() {
