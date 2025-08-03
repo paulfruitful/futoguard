@@ -11,7 +11,7 @@ export async function GET() {
             take: 100,
         })
         console.log("Fetched users:", users.length)
-        return NextResponse.json({ users })
+        return NextResponse.json(users)
     } catch (error) {
         console.error("Fetch users error:", error)
         return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })

@@ -6,6 +6,7 @@ import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
 import { SideNav } from "@/components/SidebarNav";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { TanstackQueryProvider } from "@/components/providers/TanstackQuery";
 // import "leaflet/dist/leaflet.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -31,11 +32,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <ErrorBoundary>
           <Providers>
-            <SideNav />
+            <TanstackQueryProvider>
+              <SideNav />
 
-            {children}
-            <Toaster />
-            <BottomNavigation />
+              {children}
+              <Toaster />
+              <BottomNavigation />
+            </TanstackQueryProvider>
           </Providers>
         </ErrorBoundary>
       </body>
