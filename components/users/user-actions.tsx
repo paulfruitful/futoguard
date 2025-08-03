@@ -17,13 +17,13 @@ export function UserActions({ userId, userName }: UserActionsProps) {
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      const response = await fetch("/api/connections", {
+      const response = await fetch("/api/contacts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          targetUserId: userId,
+          contactId: userId,
         }),
       });
 

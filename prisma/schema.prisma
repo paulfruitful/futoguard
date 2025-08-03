@@ -35,7 +35,7 @@ model Session {
 }
 
 model User {
-  id             String  @id @default(cuid())
+  id             String  @id
   fullname       String?
   username       String? @unique
   email          String  @unique

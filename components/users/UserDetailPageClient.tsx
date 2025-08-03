@@ -91,11 +91,10 @@ export default function UserDetailPageClient({
                 src={user.displayPicture || user.passport || "/placeholder.svg"}
               />
               <AvatarFallback className="bg-gray-200 text-gray-500 text-2xl">
-                {user.displayName ||
-                  user
-                    .fullname!.split(" ")
-                    .map((n) => n[0])
-                    .join("")}
+                {(user.displayName || user.fullname!)
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
               </AvatarFallback>
             </Avatar>
 
