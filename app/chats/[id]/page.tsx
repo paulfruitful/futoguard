@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Reply, MoreVertical } from "lucide-react";
 import { useSocket } from "@/hooks/use-socket";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -18,18 +20,40 @@ interface Message {
   createdAt: string;
   sender: {
     id: string;
-    name: string;
-    avatar?: string;
+    fullname: string;
+    displayName?: string;
+    passport: string;
+    displayPicture?: string;
   };
 }
 
 interface Chat {
   id: string;
-  participant: {
+  type: string;
+  name: string;
+  participant?: {
     id: string;
-    name: string;
-    avatar?: string;
+    fullname: string;
+    displayName?: string;
+    passport: string;
+    displayPicture?: string;
+    // isOnline: boolean;
+    lastSeen: string;
   };
+  participants: Array<{
+    id: string;
+    userId: string;
+    role: string;
+    user: {
+      id: string;
+      fullname: string;
+      displayName?: string;
+      passport: string;
+      displayPicture?: string;
+      // isOnline: boolean;
+      lastSeen: string;
+    };
+  }>;
 }
 
 interface ChatPageProps {
@@ -38,25 +62,54 @@ interface ChatPageProps {
 
 export default function ChatPage({ params }: ChatPageProps) {
   const [chatId, setChatId] = useState<string>("");
-  const [chat, setChat] = useState<Chat | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>(null);
   const socket = useSocket();
 
   useEffect(() => {
     const initializeChat = async () => {
       const resolvedParams = await params;
       setChatId(resolvedParams.id);
-      await fetchChat(resolvedParams.id);
-      await fetchMessages(resolvedParams.id);
     };
     initializeChat();
   }, [params]);
+
+  // Fetch chat details
+  const {
+    data: chat,
+    isLoading: chatLoading,
+    error: chatError,
+  } = useQuery({
+    queryKey: ["chat", chatId],
+    queryFn: async () => {
+      const response = await fetch(`/api/chats/${chatId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch chat");
+      }
+      return response.json();
+    },
+    enabled: !!chatId,
+  });
+
+  // Fetch messages
+  const {
+    data: messages = [],
+    isLoading: messagesLoading,
+    error: messagesError,
+  } = useQuery({
+    queryKey: ["messages", chatId],
+    queryFn: async () => {
+      const response = await fetch(`/api/chats/${chatId}/messages`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+      return response.json();
+    },
+    enabled: !!chatId,
+  });
 
   useEffect(() => {
     if (!socket || !chatId) return;
@@ -67,7 +120,7 @@ export default function ChatPage({ params }: ChatPageProps) {
     // Listen for new messages
     socket.on("new_message", (message: Message) => {
       if (message.chatId === chatId) {
-        setMessages((prev) => [...prev, message]);
+        // You would typically update the messages using React Query here
         scrollToBottom();
       }
     });
@@ -95,28 +148,6 @@ export default function ChatPage({ params }: ChatPageProps) {
     scrollToBottom();
   }, [messages]);
 
-  const fetchChat = async (id: string) => {
-    try {
-      const response = await fetch(`/api/chats/${id}`);
-      const data = await response.json();
-      setChat(data);
-    } catch (error) {
-      console.error("Error fetching chat:", error);
-    }
-  };
-
-  const fetchMessages = async (id: string) => {
-    try {
-      const response = await fetch(`/api/chats/${id}/messages`);
-      const data = await response.json();
-      setMessages(data);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const sendMessage = async () => {
     if (!newMessage.trim() || !socket) return;
 
@@ -142,6 +173,7 @@ export default function ChatPage({ params }: ChatPageProps) {
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      toast.error("Failed to send message");
     }
   };
 
@@ -188,18 +220,34 @@ export default function ChatPage({ params }: ChatPageProps) {
     });
   };
 
-  if (loading) {
+  if (chatLoading || messagesLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="p-4">Loading...</div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="p-4">Loading chat...</div>
+      </div>
+    );
+  }
+
+  if (chatError || messagesError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="p-4">
+          <div className="text-center py-8">
+            <h3 className="text-lg font-semibold mb-2">Error Loading Chat</h3>
+            <p className="text-gray-600 mb-4">
+              There was an error loading this conversation.
+            </p>
+            <Button onClick={() => window.history.back()}>Go Back</Button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pt-20">
+    <div className="min-h-screen bg-gray-50 pb-20 flex flex-col">
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 bg-white border-b">
+      <div className="flex items-center justify-between p-4 p bg-white border-b">
         <div className="flex items-center space-x-3">
           <Button
             variant="ghost"
@@ -221,18 +269,32 @@ export default function ChatPage({ params }: ChatPageProps) {
             </svg>
           </Button>
           <Avatar className="w-10 h-10">
-            <AvatarImage src={chat?.participant.avatar || "/placeholder.svg"} />
+            <AvatarImage
+              src={
+                chat?.participant?.displayPicture ||
+                chat?.participant?.passport ||
+                "/placeholder.svg"
+              }
+            />
             <AvatarFallback>
-              {chat?.participant.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
+              {chat?.displayname ||
+                chat?.fullname
+                  ?.split(" ")
+                  .map((n: string) => n[0])
+                  .join("") ||
+                "?"}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="font-semibold">{chat?.participant.name}</h1>
-            {typingUsers.length > 0 && (
+            <h1 className="font-semibold">
+              {chat?.participant.displayName || chat?.participant.fullname}
+            </h1>
+            {typingUsers.length > 0 ? (
               <p className="text-xs text-green-500">typing...</p>
+            ) : chat?.participant?.isOnline ? (
+              <p className="text-xs text-green-500">online</p>
+            ) : (
+              <p className="text-xs text-gray-500">offline</p>
             )}
           </div>
         </div>
@@ -243,7 +305,7 @@ export default function ChatPage({ params }: ChatPageProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => {
+        {messages.map((message: Message) => {
           const isOwn = message.senderId === getCurrentUserId();
           return (
             <div
@@ -253,7 +315,10 @@ export default function ChatPage({ params }: ChatPageProps) {
               <div className={cn("max-w-[80%] space-y-1")}>
                 {message.replyTo && (
                   <div className="text-xs text-gray-500 border-l-2 border-gray-300 pl-2 mb-1">
-                    <p className="font-medium">{message.replyTo.sender.name}</p>
+                    <p className="font-medium">
+                      {message.replyTo.sender.displayName ||
+                        message.replyTo.sender.displayName}
+                    </p>
                     <p className="truncate">{message.replyTo.content}</p>
                   </div>
                 )}
@@ -294,7 +359,8 @@ export default function ChatPage({ params }: ChatPageProps) {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-xs text-gray-500">
-                Replying to {replyingTo.sender.name}
+                Replying to{" "}
+                {replyingTo.sender.displayName || replyingTo.sender.fullname}
               </p>
               <p className="text-sm truncate">{replyingTo.content}</p>
             </div>

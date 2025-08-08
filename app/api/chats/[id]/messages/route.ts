@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { PrismaClient } from "@prisma/client"
+import { auth } from "@/auth"
 
 const prisma = new PrismaClient()
 
@@ -45,9 +46,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    console.log('ABout to send a message')
     const { id } = await params
     const { content, replyToId } = await request.json()
-    const currentUserId = "current-user-id" // Get from auth
+
+    const session = await auth()
+    const currentUserId = session?.user?.id
 
     const message = await prisma.message.create({
       data: {
@@ -79,6 +83,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         },
       },
     })
+    console.log('Message sent', message)
 
     return NextResponse.json(message)
   } catch (error) {

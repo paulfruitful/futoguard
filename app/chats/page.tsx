@@ -15,8 +15,10 @@ interface Chat {
   id: string;
   participant: {
     id: string;
-    name: string;
-    avatar?: string;
+    displayName?: string;
+    fullname: string;
+    passport: string;
+    displayPicture?: string;
   };
   lastMessage?: {
     content: string;
@@ -86,9 +88,11 @@ export default function ChatsPage() {
     }
   };
 
-  const filteredChats = chats?.filter((chat) =>
-    chat.participant.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredChats = chats?.filter((chat) => {
+    const nameToSearch =
+      chat.participant.displayName ?? chat.participant.fullname;
+    return nameToSearch?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -149,20 +153,26 @@ export default function ChatsPage() {
                 <div className="flex items-center space-x-3 p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors">
                   <Avatar className="w-12 h-12">
                     <AvatarImage
-                      src={chat.participant.avatar || "/placeholder.svg"}
+                      src={
+                        chat.participant.displayPicture ||
+                        chat.participant.passport ||
+                        "/placeholder.svg"
+                      }
                     />
                     <AvatarFallback>
-                      {chat.participant.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
+                      {chat.participant.displayName ||
+                        chat.participant
+                          .fullname!.split(" ")
+                          .map((n) => n[0])
+                          .join("")}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-semibold text-gray-900 truncate">
-                        {chat.participant.name}
+                        {chat.participant.displayName ||
+                          chat.participant.fullname}
                       </h3>
                       {chat.lastMessage && (
                         <span className="text-xs text-gray-500">
