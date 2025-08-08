@@ -1,6 +1,10 @@
 "use client";
 
-import Map from "@/components/LeafletMap";
+import dynamic from "next/dynamic";
+
+const MapComponent = dynamic(() => import("@/components/LeafletMap"), {
+  ssr: false,
+});
 
 const mockUsers = [
   { id: 1, name: "John Doe", phone: "08012345678", lat: 5.3811, lng: 6.9946 },
@@ -15,5 +19,5 @@ const mockUsers = [
 ];
 
 export default function MapPage() {
-  return <Map users={mockUsers} />;
+  return <MapComponent users={mockUsers} />;
 }

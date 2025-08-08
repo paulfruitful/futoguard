@@ -27,9 +27,9 @@ export default async function HomePage() {
             <h1 className="text-2xl font-bold text-gray-900">FUTO Guard</h1>
           </div>
           <div className="space-x-4">
-            <Button variant="outline" asChild>
+            {/* <Button variant="outline" asChild>
               <Link href="/auth/signin">Sign In</Link>
-            </Button>
+            </Button> */}
             <Button asChild>
               <Link href="/auth/signin">Get Started</Link>
             </Button>

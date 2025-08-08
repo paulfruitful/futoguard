@@ -77,7 +77,7 @@ export function SideNav() {
           </nav>
 
           {/* User Profile */}
-          <div className="border-t p-4">
+          {/* <div className="border-t p-4">
             <div className="flex items-center">
               <Avatar className="w-10 h-10">
                 <AvatarImage src="/placeholder.svg?height=40&width=40" />
@@ -90,7 +90,7 @@ export function SideNav() {
                 <p className="text-xs text-gray-500">Student</p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </>
