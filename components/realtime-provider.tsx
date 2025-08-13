@@ -41,7 +41,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     })
 
     // Subscribe to admin alerts if admin
-    if (session.user.role === "ADMIN") {
+    if ((session?.user as any)?.role === "ADMIN") {
       const adminChannel = pusherClient.subscribe("admin-alerts")
 
       adminChannel.bind("new-alert", (data: any) => {
@@ -55,7 +55,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       pusherClient.unsubscribe("campus-alerts")
-      if (session.user.role === "ADMIN") {
+      if ((session?.user as any)?.role === "ADMIN") {
         pusherClient.unsubscribe("admin-alerts")
       }
     }

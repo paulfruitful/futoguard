@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Mic, CheckCircle, MicOff } from "lucide-react";
-import { AudioHandler } from "@/src/AI/audiohandler";
+import { recordAudio } from "@/src/AI/audiohandler";
 
 interface SOSButtonProps {
   userId: string;
@@ -16,8 +16,9 @@ export function SOSButton({ userId }: SOSButtonProps) {
   const [countdown, setCountdown] = useState(0);
   const { location, alert, setAlertState, setLocation } = useAppStore();
   const { toast } = useToast();
-  const audioHandlerRef = useRef<AudioHandler | null>(null);
+  const audioHandlerRef = useRef<any | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [audioClassification, setAudioSetClassification]= useState()
 
   // Get user location
   useEffect(() => {
@@ -57,6 +58,59 @@ export function SOSButton({ userId }: SOSButtonProps) {
     return () => clearInterval(interval);
   }, [alert.isRecording, countdown]);
 
+      function float32ToWavBuffer(float32Array: Float32Array, sampleRate = 16000) {
+      const buffer = new ArrayBuffer(44 + float32Array.length * 2);
+      const view = new DataView(buffer);
+      // WAV header
+      const writeString = (view: DataView, offset: number, str: string) => {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      };
+      writeString(view, 0, "RIFF");
+      view.setUint32(4, 36 + float32Array.length * 2, true);
+      writeString(view, 8, "WAVE");
+      writeString(view, 12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(view, 36, "data");
+      view.setUint32(40, float32Array.length * 2, true);
+      let offset = 44;
+      for (let i = 0; i < float32Array.length; i++, offset += 2) {
+        let s = Math.max(-1, Math.min(1, float32Array[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      return buffer;
+    }
+
+  
+  async function sendToGradio(float32Array: any) {
+  const wavBuffer = float32ToWavBuffer(float32Array, 16000);
+  const blob = new Blob([wavBuffer], { type: "audio/wav" });
+
+  // Convert blob to base64 or ArrayBuffer to send
+  const arrayBuffer = await blob.arrayBuffer();
+  const uint8Array = Array.from(new Uint8Array(arrayBuffer));
+
+  const res = await fetch("/api/audio-detect", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ audioBuffer: uint8Array }),
+  });
+
+  if (!res.ok) throw new Error(`Error: ${res.status}`);
+  return await res.json();
+}
+
+
+
+
+
   const handleSOSPress = async () => {
     if (!location.latitude || !location.longitude) {
       toast({
@@ -66,58 +120,59 @@ export function SOSButton({ userId }: SOSButtonProps) {
       });
       return;
     }
-
+    console.log("I am recording")
     setIsPressed(true);
     setAlertState({ isRecording: true });
     setCountdown(30); // 30 second recording
-
-    // Initialize audio handler
     try {
-      if (!audioHandlerRef.current) {
-        audioHandlerRef.current = new AudioHandler();
-      }
-
-      await audioHandlerRef.current.initialize();
-
       toast({
         title: "Recording Started",
         description: "Recording audio for 30 seconds...",
       });
+      // Start recording immediately
+     await recordAudio(30);
+
     } catch (error) {
       toast({
         title: "Recording Error",
-        description: "Unable to start audio recording.",
+        description: "Unable to start audio recording. Please check microphone permissions.",
         variant: "destructive",
       });
       setAlertState({ isRecording: false });
+      console.log(error)
     }
   };
+
+  async function classifyAudio(audioBuffer: Float32Array) {
+    // Convert Float32Array to WAV buffer
+    const wavBuffer = float32ToWavBuffer(audioBuffer, 16000);
+    const blob = new Blob([wavBuffer], { type: "audio/wav" });
+    const arrayBuffer = await blob.arrayBuffer();
+    const uint8Array = Array.from(new Uint8Array(arrayBuffer));
+    const res = await fetch("/auto-detect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audioBuffer: uint8Array }),
+    });
+    if (!res.ok) throw new Error(`Error: ${res.status}`);
+    return await res.json();
+  }
 
   const handleSendAlert = async () => {
     try {
       let audioUrl = null;
       let audioBuffer = null;
       let volume = 0;
-
-      // Process audio if recording was active
-      if (audioHandlerRef.current) {
-        const audioBlob = await audioHandlerRef.current.stopRecording();
-
-        if (audioBlob) {
-          // Convert audio to Float32Array for AI analysis
-          audioBuffer = await audioHandlerRef.current.blobToFloat32Array(
-            audioBlob
-          );
-          volume = audioHandlerRef.current.getCurrentVolume();
-
-          // Upload audio to Firebase
-          audioUrl = await audioHandlerRef.current.uploadAudioToFirebase(
-            audioBlob,
-            `sos-${Date.now()}`
-          );
-        }
-      }
-
+      let classificationResult = null;
+      // Record audio using recordAudio
+      audioBuffer = await recordAudio(30);
+      // AI Classification
+      classificationResult = await classifyAudio(audioBuffer);
+      // Save to localStorage
+      localStorage.setItem("sos_classification", JSON.stringify(classificationResult));
+      // Upload audio to Firebase (if needed, replace with your upload logic)
+      // audioUrl = await uploadAudioToFirebase(audioBuffer, `sos-${Date.now()}`);
+      // Save to database via alert API
       const response = await fetch("/api/alert", {
         method: "POST",
         headers: {
@@ -130,6 +185,7 @@ export function SOSButton({ userId }: SOSButtonProps) {
           audioUrl,
           audioBuffer: audioBuffer ? Array.from(audioBuffer) : null,
           volume,
+          classification: classificationResult,
         }),
       });
 
