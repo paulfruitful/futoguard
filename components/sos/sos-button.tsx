@@ -6,6 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Mic, CheckCircle, MicOff } from "lucide-react";
 import { recordAudio } from "@/src/AI/audiohandler";
+import { transcribeAudio } from "@/src/AI/transcriptionHandler";
 
 interface SOSButtonProps {
   userId: string;
@@ -162,12 +163,14 @@ export function SOSButton({ userId }: SOSButtonProps) {
     try {
       let audioUrl = null;
       let audioBuffer = null;
-      let volume = 0;
+      let transcript = "";
       let classificationResult = null;
       // Record audio using recordAudio
       audioBuffer = await recordAudio(30);
-      // AI Classification
-      classificationResult = await classifyAudio(audioBuffer);
+      // Transcribe audio
+      transcript = await transcribeAudio(audioBuffer, 16000);
+      // AI Classification/Analysis on transcript
+      classificationResult = await classifyAudio(transcript);
       // Save to localStorage
       localStorage.setItem("sos_classification", JSON.stringify(classificationResult));
       // Upload audio to Firebase (if needed, replace with your upload logic)
@@ -181,10 +184,8 @@ export function SOSButton({ userId }: SOSButtonProps) {
         body: JSON.stringify({
           latitude: location.latitude,
           longitude: location.longitude,
-          audioTranscript: "Emergency alert - audio recording completed",
+          audioTranscript: transcript,
           audioUrl,
-          audioBuffer: audioBuffer ? Array.from(audioBuffer) : null,
-          volume,
           classification: classificationResult,
         }),
       });
