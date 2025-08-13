@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Mic, CheckCircle, MicOff } from "lucide-react";
+import { AlertTriangle, Mic, CheckCircle, MicOff, Play, Pause, RotateCcw, Send } from "lucide-react";
 import { recordAudio } from "@/src/AI/audiohandler";
 import { transcribeAudio } from "@/src/AI/transcriptionHandler";
 
@@ -12,12 +13,20 @@ interface SOSButtonProps {
   userId: string;
 }
 
+type RecordingState = "idle" | "recording" | "preview" | "sending" | "sent";
+
 export function SOSButton({ userId }: SOSButtonProps) {
-  const [isPressed, setIsPressed] = useState(false);
+  const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [countdown, setCountdown] = useState(0);
+  const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+
   const { location, alert, setAlertState, setLocation } = useAppStore();
   const { toast } = useToast();
-  const audioHandlerRef = useRef<any | null>(null);
+  const audioHandlerRef = useRef<AudioHandler | null>(null);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [audioClassification, setAudioSetClassification]= useState()
 
@@ -45,19 +54,35 @@ export function SOSButton({ userId }: SOSButtonProps) {
     }
   }, [setLocation, toast]);
 
-  // Recording countdown
+  // Recording countdown and duration tracking
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (alert.isRecording && countdown > 0) {
+    if (recordingState === "recording") {
       interval = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-        setAlertState({ recordingDuration: 30 - countdown });
+        setCountdown((prev) => {
+          const newCount = prev - 1;
+          setRecordingDuration(30 - newCount);
+
+          // Auto-stop at 30 seconds
+          if (newCount <= 0) {
+            handleStopRecording(true);
+          }
+
+          return newCount;
+        });
       }, 1000);
-    } else if (alert.isRecording && countdown === 0) {
-      handleSendAlert();
     }
     return () => clearInterval(interval);
-  }, [alert.isRecording, countdown]);
+  }, [recordingState]);
+
+  // Cleanup audio URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
 
       function float32ToWavBuffer(float32Array: Float32Array, sampleRate = 16000) {
       const buffer = new ArrayBuffer(44 + float32Array.length * 2);
@@ -121,82 +146,215 @@ export function SOSButton({ userId }: SOSButtonProps) {
       });
       return;
     }
-    console.log("I am recording")
-    setIsPressed(true);
-    setAlertState({ isRecording: true });
-    setCountdown(30); // 30 second recording
     try {
+      if (!audioHandlerRef.current) {
+        audioHandlerRef.current = new AudioHandler();
+      }
+      await audioHandlerRef.current.initialize();
+      await audioHandlerRef.current.startRecording();
+      setRecordingState("recording");
+      setCountdown(30);
+      setRecordingDuration(0);
+      setIsPressed(true);
+      setAlertState({ isRecording: true });
       toast({
         title: "Recording Started",
-        description: "Recording audio for 30 seconds...",
+        description: "Recording audio... Tap 'Stop' to finish early.",
       });
-      // Start recording immediately
-     await recordAudio(30);
-
     } catch (error) {
+      console.error("Audio init error:", error);
       toast({
         title: "Recording Error",
         description: "Unable to start audio recording. Please check microphone permissions.",
         variant: "destructive",
       });
-      setAlertState({ isRecording: false });
-      console.log(error)
+      setRecordingState("idle");
     }
   };
 
-  async function classifyAudio(audioBuffer: Float32Array) {
-    // Convert Float32Array to WAV buffer
-    const wavBuffer = float32ToWavBuffer(audioBuffer, 16000);
-    const blob = new Blob([wavBuffer], { type: "audio/wav" });
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8Array = Array.from(new Uint8Array(arrayBuffer));
-    const res = await fetch("/auto-detect", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ audioBuffer: uint8Array }),
-    });
-    if (!res.ok) throw new Error(`Error: ${res.status}`);
-    return await res.json();
-  }
+  const handleStopRecording = async (autoStopped: boolean) => {
+    if (!audioHandlerRef.current) return;
 
-  const handleSendAlert = async () => {
+    console.log("auto stopped recording...", autoStopped);
+
     try {
-      let audioUrl = null;
-      let audioBuffer = null;
-      let transcript = "";
-      let classificationResult = null;
-      // Record audio using recordAudio
-      audioBuffer = await recordAudio(30);
-      // Transcribe audio
-      transcript = await transcribeAudio(audioBuffer, 16000);
-      // AI Classification/Analysis on transcript
-      classificationResult = await classifyAudio(transcript);
-      // Save to localStorage
-      localStorage.setItem("sos_classification", JSON.stringify(classificationResult));
-      // Upload audio to Firebase (if needed, replace with your upload logic)
-      // audioUrl = await uploadAudioToFirebase(audioBuffer, `sos-${Date.now()}`);
-      // Save to database via alert API
-      const response = await fetch("/api/alert", {
+      const result = await audioHandlerRef.current.stopRecording();
+      if (!result?.audioBlob) throw new Error("No audio recorded");
+
+      const audioBlob = result.audioBlob;
+      const audioBuffer = result.audioBuffer;
+      setRecordedAudio(audioBlob);
+      setAudioUrl(URL.createObjectURL(audioBlob));
+
+      if (autoStopped) {
+        // Automatically send to AI and alert
+        console.log(
+          "it was auto stopped hence automatic sending to api endpoint"
+        );
+        const ai = await processAndSendAlert(audioBlob, audioBuffer, result);
+        console.log("AI processing result:", ai);
+      } else {
+        // Enter preview state for user
+        console.log("it was manually stopped hence entering preview state");
+        setRecordingState("preview");
+        toast({
+          title: "Recording Complete",
+          description: `Recorded ${result.duration} seconds. Review before sending.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Recording Error",
+        description:
+          error instanceof Error ? error.message : "Failed to process audio.",
+        variant: "destructive",
+      });
+      setRecordingState("idle");
+    }
+  };
+
+  const processAndSendAlert = async (
+    audioBlob: Blob,
+    audioBuffer: Float32Array,
+    result: AudioRecordingResult
+  ) => {
+    if (!audioHandlerRef.current) return;
+
+    setRecordingState("sending");
+
+    try {
+      // Send audio to AI
+      const aiResponse = await fetch("/api/ai/process-audio", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        body: JSON.stringify({
+          audioBuffer: Array.from(audioBuffer),
+          duration: result.duration,
+          volume: result.volume,
+        }),
+      });
+      const { transcript, category, urgencyScore } = await aiResponse.json();
+
+      // Upload audio and send alert
+      const audioUploadUrl =
+        await audioHandlerRef.current.uploadAudioToFirebase(
+          audioBlob,
+          `sos-${Date.now()}`
+        );
+
+      const alertResponse = await fetch("/api/alert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           latitude: location.latitude,
           longitude: location.longitude,
           audioTranscript: transcript,
-          audioUrl,
-          classification: classificationResult,
+          audioUrl: audioUploadUrl,
+          audioBuffer: Array.from(audioBuffer),
+          volume: result.volume,
+          recordingDuration: result.duration,
+          category,
+          urgencyScore,
         }),
       });
 
-      if (response.ok) {
-        const result = await response.json();
+      if (!alertResponse.ok) throw new Error("Failed to send alert");
+      const alertData = await alertResponse.json();
+
+      setAlertState({
+        alertSent: true,
+        isRecording: false,
+        currentAlert: alertData.alert,
+      });
+
+      setRecordingState("sent");
+
+      toast({
+        title: "Emergency Alert Sent",
+        description: `AI analysis complete. Help is on the way.`,
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "SOS Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to process audio.",
+        variant: "destructive",
+      });
+      setRecordingState("idle");
+    } finally {
+      audioHandlerRef.current?.cleanup();
+    }
+  };
+
+  const handlePlayPause = () => {
+    if (!audioElementRef.current || !audioUrl) return;
+
+    if (isPlaying) {
+      audioElementRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioElementRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+  };
+
+  const handleRetryRecording = () => {
+    // Cleanup previous recording
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+      setAudioUrl(null);
+    }
+    setRecordedAudio(null);
+    setRecordingState("idle");
+    setRecordingDuration(0);
+  };
+
+  const handleSendAlert = async () => {
+    if (!recordedAudio) return;
+
+    setRecordingState("sending");
+
+    try {
+      let audioUploadUrl = null;
+      let audioBuffer = null;
+      let volume = 0;
+
+      // Process audio
+      if (audioHandlerRef.current) {
+        // Convert audio to Float32Array for AI analysis
+        audioBuffer = await audioHandlerRef.current.blobToFloat32Array(
+          recordedAudio
+        );
+        volume = audioHandlerRef.current.getCurrentVolume();
+
+        console.log("Audio buffer length:", audioBuffer.length);
+
+        // Upload audio to Firebase
+        // audioUploadUrl = await audioHandlerRef.current.uploadAudioToFirebase(
+        //   recordedAudio,
+        //   `sos-${Date.now()}`
+        // );
+
+        const ai = await processAndSendAlert(
+          "audioBlob",
+          audioBuffer,
+          "result"
+        );
+        console.log("AI processing result:", ai);
+      }
+
+      if ("ai processing and alert sending was ok") {
         setAlertState({
           alertSent: true,
           isRecording: false,
           currentAlert: result.alert,
         });
+
+        setRecordingState("sent");
 
         toast({
           title: "Alert Sent Successfully",
@@ -216,7 +374,7 @@ export function SOSButton({ userId }: SOSButtonProps) {
             : "Unable to send alert. Please try again or call security directly.",
         variant: "destructive",
       });
-      setAlertState({ isRecording: false });
+      setRecordingState("preview");
     } finally {
       // Cleanup audio handler
       if (audioHandlerRef.current) {
@@ -225,7 +383,8 @@ export function SOSButton({ userId }: SOSButtonProps) {
     }
   };
 
-  if (alert.alertSent) {
+  // Success state
+  if (recordingState === "sent") {
     return (
       <div className="text-center space-y-4">
         <div className="w-32 h-32 mx-auto bg-green-100 rounded-full flex items-center justify-center">
@@ -243,6 +402,9 @@ export function SOSButton({ userId }: SOSButtonProps) {
               <p className="text-sm text-green-700">
                 Category: {alert.currentAlert.category}
               </p>
+              <p className="text-sm text-green-700">
+                Recording Duration: {recordingDuration}s
+              </p>
             </div>
           )}
         </div>
@@ -250,47 +412,149 @@ export function SOSButton({ userId }: SOSButtonProps) {
     );
   }
 
+  // Audio preview state
+  if (recordingState === "preview") {
+    return (
+      <div className="text-center space-y-6">
+        <div className="w-32 h-32 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
+          <Mic className="h-16 w-16 text-blue-600" />
+        </div>
+
+        <div>
+          <h3 className="text-xl font-semibold text-gray-800">
+            Recording Complete
+          </h3>
+          <p className="text-gray-600">Duration: {recordingDuration} seconds</p>
+        </div>
+
+        {/* Audio Preview Card */}
+        <Card className="max-w-md mx-auto">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center space-x-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePlayPause}
+                className="w-12 h-12 rounded-full bg-transparent"
+              >
+                {isPlaying ? (
+                  <Pause className="h-5 w-5" />
+                ) : (
+                  <Play className="h-5 w-5" />
+                )}
+              </Button>
+
+              <div className="flex-1">
+                <div className="text-sm text-gray-600 mb-1">Audio Preview</div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full w-full" />
+                </div>
+              </div>
+            </div>
+
+            {/* Hidden audio element */}
+            {audioUrl && (
+              <audio
+                ref={audioElementRef}
+                src={audioUrl}
+                onEnded={handleAudioEnded}
+                className="hidden"
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Action buttons */}
+        <div className="flex justify-center space-x-4">
+          <Button
+            variant="outline"
+            onClick={handleRetryRecording}
+            className="flex items-center space-x-2 bg-transparent"
+          >
+            <RotateCcw className="h-4 w-4" />
+            <span>Record Again</span>
+          </Button>
+
+          <Button
+            onClick={handleSendAlert}
+            disabled={recordingState === "sending"}
+            className="bg-red-600 hover:bg-red-700 flex items-center space-x-2"
+          >
+            <Send className="h-4 w-4" />
+            <span>
+              {recordingState === "sending" ? "Sending..." : "Send Alert"}
+            </span>
+          </Button>
+        </div>
+
+        <p className="text-gray-500 text-sm max-w-md mx-auto">
+          Review your recording and send the emergency alert to nearby users and
+          security personnel.
+        </p>
+      </div>
+    );
+  }
+
+  // Recording state
+  if (recordingState === "recording") {
+    return (
+      <div className="text-center space-y-6">
+        <div className="w-48 h-48 mx-auto bg-red-600 rounded-full flex items-center justify-center relative">
+          <div className="absolute inset-4 border-4 border-red-300 rounded-full animate-pulse" />
+          <div className="flex flex-col items-center space-y-2 text-white">
+            <Mic className="h-12 w-12 animate-pulse" />
+            <span className="text-2xl font-bold">{countdown}s</span>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-center space-x-2 text-red-600">
+            <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
+            <span className="font-medium">Recording in progress...</span>
+          </div>
+
+          <div className="w-full max-w-md mx-auto bg-red-200 rounded-full h-3">
+            <div
+              className="bg-red-600 h-3 rounded-full transition-all duration-1000"
+              style={{ width: `${(recordingDuration / 30) * 100}%` }}
+            />
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => handleStopRecording(false)}
+            className="flex items-center space-x-2 border-red-300 text-red-600 hover:bg-red-50 bg-transparent"
+          >
+            <MicOff className="h-4 w-4" />
+            <span>Stop Recording</span>
+          </Button>
+        </div>
+
+        <p className="text-gray-600 text-sm max-w-md mx-auto">
+          Recording audio for emergency alert. You can stop early or let it
+          record for the full 30 seconds.
+        </p>
+      </div>
+    );
+  }
+
+  // Initial state
   return (
     <div className="text-center space-y-6">
       <Button
         size="lg"
-        className={`w-48 h-48 rounded-full text-white font-bold text-xl transition-all duration-200 ${
-          isPressed
-            ? "bg-red-700 scale-95 shadow-inner"
-            : "bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl"
-        }`}
+        className="w-48 h-48 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-xl transition-all duration-200 shadow-lg hover:shadow-xl"
         onClick={handleSOSPress}
-        disabled={alert.isRecording}
       >
         <div className="flex flex-col items-center space-y-2">
           <span className="text-3xl">SOS</span>
-          {alert.isRecording && (
-            <div className="flex items-center space-x-1">
-              <Mic className="h-4 w-4 animate-pulse" />
-              <span className="text-sm">{countdown}s</span>
-            </div>
-          )}
+          <Mic className="h-6 w-6" />
         </div>
       </Button>
 
-      {alert.isRecording && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-center space-x-2 text-red-600">
-            <Mic className="h-5 w-5 animate-pulse" />
-            <span>Recording audio...</span>
-          </div>
-          <div className="w-full bg-red-200 rounded-full h-2">
-            <div
-              className="bg-red-600 h-2 rounded-full transition-all duration-1000"
-              style={{ width: `${((30 - countdown) / 30) * 100}%` }}
-            />
-          </div>
-        </div>
-      )}
-
       <p className="text-gray-600 text-sm max-w-md mx-auto">
-        Your location and a 30-second audio recording will be sent to nearby
-        users and security personnel.
+        Press to start recording a 30-second audio message. Your location and
+        audio will be sent to nearby users and security personnel.
       </p>
     </div>
   );
