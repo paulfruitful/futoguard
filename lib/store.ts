@@ -13,6 +13,10 @@ interface AlertState {
   recordingDuration: number
   alertSent: boolean
   currentAlert: any | null
+  transcript: string | null
+  audioUrl: string | null
+  category: string | null
+  urgencyScore: string | null
 }
 
 interface AppState {
