@@ -28,5 +28,5 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Gradio API Error:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
-  }
+  } 
 }

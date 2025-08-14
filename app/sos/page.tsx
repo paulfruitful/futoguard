@@ -34,7 +34,7 @@ export default async function SOSPage() {
 
           {/* SOS Button */}
           <div className="flex justify-center">
-            <SOSButton userId={session.user.id} />
+            <SOSButton userId={session.user?.id ?? ''} />
           </div>
           <SituationSelection />
 

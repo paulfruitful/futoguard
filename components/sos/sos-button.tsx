@@ -25,7 +25,7 @@ export function SOSButton({ userId }: SOSButtonProps) {
 
   const { location, alert, setAlertState, setLocation } = useAppStore();
   const { toast } = useToast();
-  const audioHandlerRef = useRef<AudioHandler | null>(null);
+  const audioHandlerRef = useRef<any | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [audioClassification, setAudioSetClassification]= useState()
@@ -147,25 +147,70 @@ export function SOSButton({ userId }: SOSButtonProps) {
       return;
     }
     try {
-      if (!audioHandlerRef.current) {
-        audioHandlerRef.current = new AudioHandler();
-      }
-      await audioHandlerRef.current.initialize();
-      await audioHandlerRef.current.startRecording();
       setRecordingState("recording");
       setCountdown(30);
       setRecordingDuration(0);
-      setIsPressed(true);
       setAlertState({ isRecording: true });
       toast({
         title: "Recording Started",
         description: "Recording audio... Tap 'Stop' to finish early.",
       });
+      // Start recording using recordAudio
+      const audioBuffer = await recordAudio(30);
+      // Convert Float32Array to WAV Blob
+      const wavBuffer = float32ToWavBuffer(audioBuffer, 16000);
+      const audioBlob = new Blob([wavBuffer], { type: "audio/wav" });
+      setRecordedAudio(audioBlob);
+      setAudioUrl(URL.createObjectURL(audioBlob));
+      setRecordingState("preview");
+      setRecordingDuration(30);
+      // Send audio for classification
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const uint8Array = Array.from(new Uint8Array(arrayBuffer));
+      const response = await fetch("/api/auto-detect", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ audioBuffer: Array.from(new Uint8Array(wavBuffer)) })
+      });
+      if (!response.ok) {
+        throw new Error("Classification error: " + response.status);
+      }
+      const classificationResult = await response.json();
+      setClassification(classificationResult);
+      // Trigger alert if classification indicates high risk
+      if (classificationResult && classificationResult.classifications) {
+        const highRiskClasses = ['gunshot', 'gun', 'explosion', 'scream', 'panic'];
+        const threshold = 0.7;
+        const highRisk = classificationResult.classifications.find(
+          (c: any) => highRiskClasses.includes(c.className.toLowerCase()) && c.probability >= threshold
+        );
+        if (highRisk) {
+          await fetch("/api/alert", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              latitude: location.latitude,
+              longitude: location.longitude,
+              category: highRisk.className,
+              urgencyScore: highRisk.probability,
+              classification: classificationResult,
+              source: "sos-button"
+            })
+          });
+          toast({
+            title: "High-Risk Alert Sent",
+            description: `Detected ${highRisk.className} with confidence ${Math.round(highRisk.probability * 100)}%`,
+            variant: "destructive"
+          });
+        }
+      }
     } catch (error) {
       console.error("Audio init error:", error);
       toast({
         title: "Recording Error",
-        description: "Unable to start audio recording. Please check microphone permissions.",
+        description: "Unable to start audio recording or classify audio. Please check microphone permissions.",
         variant: "destructive",
       });
       setRecordingState("idle");
@@ -173,44 +218,7 @@ export function SOSButton({ userId }: SOSButtonProps) {
   };
 
   const handleStopRecording = async (autoStopped: boolean) => {
-    if (!audioHandlerRef.current) return;
-
-    console.log("auto stopped recording...", autoStopped);
-
-    try {
-      const result = await audioHandlerRef.current.stopRecording();
-      if (!result?.audioBlob) throw new Error("No audio recorded");
-
-      const audioBlob = result.audioBlob;
-      const audioBuffer = result.audioBuffer;
-      setRecordedAudio(audioBlob);
-      setAudioUrl(URL.createObjectURL(audioBlob));
-
-      if (autoStopped) {
-        // Automatically send to AI and alert
-        console.log(
-          "it was auto stopped hence automatic sending to api endpoint"
-        );
-        const ai = await processAndSendAlert(audioBlob, audioBuffer, result);
-        console.log("AI processing result:", ai);
-      } else {
-        // Enter preview state for user
-        console.log("it was manually stopped hence entering preview state");
-        setRecordingState("preview");
-        toast({
-          title: "Recording Complete",
-          description: `Recorded ${result.duration} seconds. Review before sending.`,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Recording Error",
-        description:
-          error instanceof Error ? error.message : "Failed to process audio.",
-        variant: "destructive",
-      });
-      setRecordingState("idle");
-    }
+    // No-op since recordAudio is one-shot
   };
 
   const processAndSendAlert = async (
@@ -315,55 +323,16 @@ export function SOSButton({ userId }: SOSButtonProps) {
 
   const handleSendAlert = async () => {
     if (!recordedAudio) return;
-
     setRecordingState("sending");
-
     try {
-      let audioUploadUrl = null;
-      let audioBuffer = null;
-      let volume = 0;
-
-      // Process audio
       if (audioHandlerRef.current) {
         // Convert audio to Float32Array for AI analysis
-        audioBuffer = await audioHandlerRef.current.blobToFloat32Array(
-          recordedAudio
-        );
-        volume = audioHandlerRef.current.getCurrentVolume();
-
-        console.log("Audio buffer length:", audioBuffer.length);
-
-        // Upload audio to Firebase
-        // audioUploadUrl = await audioHandlerRef.current.uploadAudioToFirebase(
-        //   recordedAudio,
-        //   `sos-${Date.now()}`
-        // );
-
-        const ai = await processAndSendAlert(
-          "audioBlob",
-          audioBuffer,
-          "result"
-        );
-        console.log("AI processing result:", ai);
-      }
-
-      if ("ai processing and alert sending was ok") {
-        setAlertState({
-          alertSent: true,
-          isRecording: false,
-          currentAlert: result.alert,
-        });
-
-        setRecordingState("sent");
-
-        toast({
-          title: "Alert Sent Successfully",
-          description:
-            "Emergency services and nearby users have been notified.",
-          variant: "default",
-        });
-      } else {
-        throw new Error("Failed to send alert");
+        const audioBuffer = await audioHandlerRef.current.blobToFloat32Array(recordedAudio);
+        const result = {
+          duration: recordingDuration,
+          volume: audioHandlerRef.current.getCurrentVolume(),
+        };
+        await processAndSendAlert(recordedAudio, audioBuffer, result);
       }
     } catch (error) {
       toast({
@@ -376,7 +345,6 @@ export function SOSButton({ userId }: SOSButtonProps) {
       });
       setRecordingState("preview");
     } finally {
-      // Cleanup audio handler
       if (audioHandlerRef.current) {
         audioHandlerRef.current.cleanup();
       }
