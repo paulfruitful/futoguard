@@ -22,6 +22,7 @@ export function SOSButton({ userId }: SOSButtonProps) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [classification,setClassification]=useState()
 
   const { location, alert, setAlertState, setLocation } = useAppStore();
   const { toast } = useToast();
@@ -167,6 +168,7 @@ export function SOSButton({ userId }: SOSButtonProps) {
       // Send audio for classification
       const arrayBuffer = await audioBlob.arrayBuffer();
       const uint8Array = Array.from(new Uint8Array(arrayBuffer));
+
       const response = await fetch("/api/auto-detect", {
         method: "POST",
         headers: {
@@ -179,6 +181,7 @@ export function SOSButton({ userId }: SOSButtonProps) {
       }
       const classificationResult = await response.json();
       setClassification(classificationResult);
+      
       // Trigger alert if classification indicates high risk
       if (classificationResult && classificationResult.classifications) {
         const highRiskClasses = ['gunshot', 'gun', 'explosion', 'scream', 'panic'];
@@ -186,6 +189,7 @@ export function SOSButton({ userId }: SOSButtonProps) {
         const highRisk = classificationResult.classifications.find(
           (c: any) => highRiskClasses.includes(c.className.toLowerCase()) && c.probability >= threshold
         );
+      
         if (highRisk) {
           await fetch("/api/alert", {
             method: "POST",
