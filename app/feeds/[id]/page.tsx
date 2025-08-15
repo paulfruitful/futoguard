@@ -33,7 +33,7 @@ export default async function FeedDetailsPage({
     <div className="min-h-screen bg-gray-50">
       <MobileHeader title="Details" showBack />
 
-      <div className="p-4 space-y-6 pt-20">
+      <div className="p-4 space-y-6 py-20">
         {/* User Profile Section */}
         <div className="text-center">
           <Avatar className="w-20 h-20 mx-auto mb-4">
@@ -85,6 +85,12 @@ export default async function FeedDetailsPage({
                 <span className="text-sm text-gray-600">
                   {feedDetails.emergencyLog.time}
                 </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">
+                  Blockchain TransactionId :
+                </span>
+                <span className="text-sm text-gray-600">lsk$hdjbnv..</span>
               </div>
             </div>
           </CardContent>

@@ -33,8 +33,6 @@ export default function RootLayout({
         <ErrorBoundary>
           <Providers>
             <TanstackQueryProvider>
-              <SideNav />
-
               {children}
               <Toaster />
               <BottomNavigation />

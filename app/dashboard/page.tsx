@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Users, FileText } from "lucide-react";
 import { MobileHeader } from "@/components/mobile-header";
 import { SideNav } from "@/components/SidebarNav";
+import { User } from "@/constants/types";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -20,6 +21,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* <StatusBar /> */}
       <MobileHeader title="Dashboard" />
+      <SideNav />
 
       <div className="p-4 pt-20 pb-20 space-y-6">
         {/* Alert Statistics */}

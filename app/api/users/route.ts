@@ -10,7 +10,7 @@ export async function GET() {
         const users = await prisma.user.findMany({
             take: 100,
         })
-        console.log("Fetched users:", users.length)
+        console.log("Fetched users:", users)
         return NextResponse.json(users)
     } catch (error) {
         console.error("Fetch users error:", error)

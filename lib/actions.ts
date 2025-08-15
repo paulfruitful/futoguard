@@ -51,39 +51,47 @@ interface ApiResponseData {
 
 export const upsertFutoUser = async (data: ApiResponseData) => {
     try {
-        console.log('About to upsert a user', data.personalData.fullname);
+        console.log("Checking if user exists:", data.personalData.email);
+
+        // See if user already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email: data.personalData.email },
+        });
+
+        if (existingUser) {
+            console.log("✅ User already exists, returning existing record.");
+            return existingUser;
+        }
+
+        console.log("ℹ No user found, creating a new one...");
 
         const userData: FutoUserData = {
             email: data.personalData.email,
             fullname: data.personalData.fullname,
             passport: data.personalData.passport,
-            // studentId: data.personalData.studentId?.toString(), // Convert to string if needed
-            // phoneNumber: data.personalData.mobileNumber,
             mobileNumber: data.personalData.mobileNumber,
             gender: data.personalData.gender,
             contactAddress: data.personalData.contactAddress,
-            dateOfBirth: data.personalData.dateOfBirth?.split('T')[0], // Extract just the date part
+            dateOfBirth: data.personalData.dateOfBirth?.split("T")[0],
             state: data.personalData.state,
             religion: data.personalData.religion,
             matricNumber: data.programmeDetail.matricNumber,
             level: data.programmeDetail.level,
             department: data.programmeDetail.department,
             modeOfEntry: data.programmeDetail.modeOfEntry,
-            id: data.programmeDetail.matricNumber, // Using email as ID
-            username: data.programmeDetail.matricNumber
+            id: data.programmeDetail.matricNumber,
+            username: data.programmeDetail.matricNumber,
         };
 
-        const user = await prisma.user.upsert({
-            where: { email: userData.email },
-            update: userData,
-            create: userData
+        const newUser = await prisma.user.create({
+            data: userData,
         });
 
-        console.log('Successful', user);
-        return user;
+        console.log("✅ User created successfully:", newUser);
+        return newUser;
     } catch (error) {
-        console.error("❌ Error in upsertFutoUser:", error);
-        throw new Error("Failed to upsert user.");
+        console.error("❌ Error in createOrFetchFutoUser:", error);
+        throw new Error("Failed to create or fetch user.");
     }
 };
 

@@ -34,7 +34,7 @@ export function MobileHeader({
     router.back();
   };
   return (
-    <div className="fixed w-full flex items-center justify-between p-4 bg-white border-b lg:hidden">
+    <div className="fixed w-full  z-50 flex items-center justify-between p-4 bg-white border-b lg:hidden">
       <div className="flex items-center">
         {showBack ? (
           <Button

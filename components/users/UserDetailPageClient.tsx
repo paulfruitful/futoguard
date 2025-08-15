@@ -43,7 +43,7 @@ export default function UserDetailPageClient({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Custom Header */}
-      <div className="flex items-center justify-between p-4 bg-white border-b lg:hidden">
+      {/* <div className="flex items-center justify-between p-4 bg-white border-b lg:hidden">
         <Button
           variant="ghost"
           size="icon"
@@ -80,9 +80,9 @@ export default function UserDetailPageClient({
             />
           </svg>
         </Button>
-      </div>
+      </div> */}
 
-      <div className="p-4 space-y-6">
+      <div className="p-4 pt-7 space-y-6">
         {/* Profile Section */}
         <div className="text-center">
           <div className="relative inline-block mb-4">
