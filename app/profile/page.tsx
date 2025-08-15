@@ -33,27 +33,30 @@ export default async function ProfilePage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-xl font-semibold mb-1">{user?.name}</h2>
+              <h2 className="text font-semibold mb-1">{user?.name}</h2>
               <p className="text-gray-600 mb-1">{user?.email}</p>
               <p className="text-gray-600 mb-4">{user?.mobileNumber}</p>
-              <Link href={"/profile/edit"}>
+              {/* <Link href={"/profile/edit"}>
                 <Button
                   variant="outline"
                   className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent"
                 >
                   Edit Profile
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </CardContent>
         </Card>
 
         {/* Menu Items */}
         <div className="space-y-2">
-          <Button variant="ghost" className="w-full justify-start h-12 px-4">
-            <User className="w-5 h-5 mr-3" />
-            Profile
-          </Button>
+          <Link href="/profile/edit">
+            <Button variant="ghost" className="w-full justify-start h-12 px-4">
+              <User className="w-5 h-5 mr-3" />
+              Edit Profile
+            </Button>
+          </Link>
+
           <Button variant="ghost" className="w-full justify-start h-12 px-4">
             <Bell className="w-5 h-5 mr-3" />
             Notification

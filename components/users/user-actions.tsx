@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface UserActionsProps {
@@ -14,22 +14,55 @@ export function UserActions({ userId, userName }: UserActionsProps) {
   const router = useRouter();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [isConnected, setIsConnected] = useState(false); // hides connect btn
+
+  // console.log(
+  //   "UserActions rendered for userId:",
+  //   userId,
+  //   "userName:",
+  //   userName
+  // );
+
+  useEffect(() => {
+    const checkIfConnected = async () => {
+      try {
+        const res = await fetch("/api/contacts/check", {
+          method: "POST", // must match your endpoint handler
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contactId: userId }), // pass the user you want to check
+        });
+
+        if (!res.ok) throw new Error(`Failed: ${res.status}`);
+
+        const data = await res.json();
+        console.log("Already connected?", data.connected);
+        setIsConnected(data.connected);
+      } catch (err) {
+        console.error("Error checking contact status", err);
+      }
+    };
+
+    if (userId) {
+      checkIfConnected();
+    }
+  }, [userId]);
 
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      const response = await fetch("/api/connections", {
+      const response = await fetch("/api/contacts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          targetUserId: userId,
+          contactId: userId,
         }),
       });
 
       if (response.ok) {
         toast.success(`Connection request sent to ${userName}`);
+        setIsConnected(true);
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to send connection request");
@@ -39,7 +72,7 @@ export function UserActions({ userId, userName }: UserActionsProps) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to send connection request"
+          : "Failed to connect with this usert"
       );
     } finally {
       setIsConnecting(false);
@@ -86,13 +119,15 @@ export function UserActions({ userId, userName }: UserActionsProps) {
 
   return (
     <div className="flex space-x-3 justify-center">
-      <Button
-        className="bg-red-500 hover:bg-red-600 px-8"
-        onClick={handleConnect}
-        disabled={isConnecting}
-      >
-        {isConnecting ? "Connecting..." : "Connect"}
-      </Button>
+      {!isConnected && (
+        <Button
+          className="bg-red-500 hover:bg-red-600 px-8"
+          onClick={handleConnect}
+          disabled={isConnecting}
+        >
+          {isConnecting ? "Connecting..." : "Connect"}
+        </Button>
+      )}
       <Button
         variant="outline"
         className="px-8 bg-transparent"

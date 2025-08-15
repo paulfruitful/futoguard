@@ -3,6 +3,7 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { Suspense } from "react";
 import { ContactsPageSkeleton } from "@/components/contacts/contacts-page-skeleton";
 import { ContactsPageClient } from "@/components/contacts/contacts-page-client";
+import { SideNav } from "@/components/SidebarNav";
 
 interface EmergencyContact {
   id: string;
@@ -48,7 +49,8 @@ export default async function ContactsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <MobileHeader title="Emergency Contacts" showBack />
+      <MobileHeader title="Emergency Contacts" />
+      <SideNav />
 
       <Suspense fallback={<ContactsPageSkeleton />}>
         <ContactsPageClient initialContacts={initialContacts} />

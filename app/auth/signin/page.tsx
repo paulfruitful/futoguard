@@ -43,10 +43,6 @@ export default async function SignInPage() {
         <Card>
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Access your FUTO Guardian account to stay connected with campus
-              security.
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <SignInForm />
@@ -57,12 +53,12 @@ export default async function SignInPage() {
           <p>
             Don't have an account? Sign up with your student credentials above.
           </p>
-          <Link
+          {/* <Link
             href="/report"
             className="text-red-600 hover:underline mt-2 inline-block"
           >
             Report anonymously instead
-          </Link>
+          </Link> */}
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
 
         console.log("Session user ID:", session.user.id);
         const body = await req.json();
+        console.log("Request body:", body);
         const { contactId } = body;
 
         if (!contactId || typeof contactId !== "string") {

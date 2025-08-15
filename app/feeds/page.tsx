@@ -1,5 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { MobileHeader } from "@/components/mobile-header";
+import { SideNav } from "@/components/SidebarNav";
+import Link from "next/link";
 
 const incidents = [
   {
@@ -32,21 +34,30 @@ export default function FeedsPage() {
   return (
     <div className="min-h-screen bg-gray-50 ">
       <MobileHeader title="Incident Feed" />
+      <SideNav />
 
-      <div className="p-4 space-y-4 pt-20">
+      <div className="p-4 space-y-4 py-20">
         {incidents.map((incident) => (
-          <Card key={incident.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-red-500">{incident.title}</h3>
-                <span className="text-xs text-gray-500">{incident.time}</span>
-              </div>
-              <p className="font-medium mb-2">{incident.location}</p>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {incident.description}
-              </p>
-            </CardContent>
-          </Card>
+          <Link
+            href={`/feeds/${incident.id}`}
+            key={incident.id}
+            className="block"
+          >
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-red-500">
+                    {incident.title}
+                  </h3>
+                  <span className="text-xs text-gray-500">{incident.time}</span>
+                </div>
+                <p className="font-medium mb-2">{incident.location}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {incident.description}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

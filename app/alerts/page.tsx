@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trash2, MapPin, Clock } from "lucide-react";
 import { MobileHeader } from "@/components/mobile-header";
-import { BottomNavigation } from "@/components/bottom-navigation";
-// import { BottomNavigation } from "@/components/bottom-navigation"
+import { SideNav } from "@/components/SidebarNav";
 
 const alerts = [
   {
@@ -25,6 +24,7 @@ export default function AlertsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <MobileHeader title="Alerts" />
+      <SideNav />
 
       <div className="p-4 space-y-4 pt-20">
         {alerts.length === 0 ? (
