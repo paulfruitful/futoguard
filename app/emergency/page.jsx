@@ -306,9 +306,6 @@ setTimeout(async () => {
                 </div>
               </div>
             </div>
-import ReactMarkdown from "react-markdown";
-
-// ...
 
 {/* Chat Messages */}
 <div className="h-64 overflow-y-auto p-5 space-y-3 bg-orange-50">
