@@ -64,7 +64,7 @@ setTimeout(async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        classification:classification.data[0].clipwise_results,
+        classification,
         location,
       }),
     });
@@ -99,7 +99,7 @@ setTimeout(async () => {
   };
 
   return (
-    <div className="min-h-[140vh] bg-gradient-to-br from-orange-50 to-orange-200 flex flex-col items-center justify-center p-6">
+    <div className="min-h-[160vh] bg-gradient-to-br from-orange-50 to-orange-200 flex flex-col items-center justify-center p-6">
       {/* Emergency Button */}
       <motion.button
         onClick={handleSOS}
@@ -109,7 +109,7 @@ setTimeout(async () => {
         transition={{ repeat: Infinity, duration: 1.5 }}
         className="w-56 h-56 rounded-full bg-red-600 text-white font-bold text-2xl shadow-2xl hover:bg-red-700 disabled:opacity-50 flex items-center justify-center"
       >
-        {isSending ? "Sending..." : "SOS"}
+        {isSending ? "Sending SOS..." : "Start SOS"}
       </motion.button>
 
       {/* Emergency Display */}
@@ -120,14 +120,18 @@ setTimeout(async () => {
           className="mt-8 p-6 w-full max-w-lg rounded-2xl shadow-xl bg-white border border-orange-300"
         >
           <h2 className="text-xl font-bold text-orange-700 flex items-center gap-2">
-            🚨 Emergency Sent
+            🚨 Emergency Alert Sent
           </h2>
-          <p className="mt-3 text-sm text-gray-700">
-            <strong>Classification:</strong> {JSON.stringify(classificationState)}
+          <p className="mt-3 text-sm text-gray-700 flex-col flex">
+            <strong>Threat Classification:</strong>
+            <ul>
+              <li>Label: {classificationState.label}</li>
+              <li>Score: {classificationState.score}</li>
+            </ul>
           </p>
           {emergencyDescription && (
             <p className="mt-2 text-sm text-gray-700">
-              <strong>Description:</strong> {emergencyDescription}
+              <strong>Emergency:</strong> {emergencyDescription}
             </p>
           )}
           {location && (
