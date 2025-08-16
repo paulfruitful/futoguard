@@ -109,7 +109,7 @@ setTimeout(async () => {
         transition={{ repeat: Infinity, duration: 1.5 }}
         className="w-56 h-56 rounded-full bg-red-600 text-white font-bold text-2xl shadow-2xl hover:bg-red-700 disabled:opacity-50 flex items-center justify-center"
       >
-        {isSending ? "Sending SOS..." : "Start SOS"}
+        {isSending ? "Sending SOS..." : "Start An SOS"}
       </motion.button>
 
       {/* Emergency Display */}

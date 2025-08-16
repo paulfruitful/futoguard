@@ -82,7 +82,7 @@ export default async function DashboardPage() {
               className="h-24 flex-col space-y-2 bg-white hover:bg-red-50"
               asChild
             >
-              <a href="/sos">
+              <a href="/emergency">
                 <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
                   <span className="text-red-500 text-sm">📞</span>
                 </div>
