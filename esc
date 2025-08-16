@@ -1,0 +1,170 @@
+[33mcommit 4571dcd302741cd74d24fb946c4258fde41150c2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Fri Aug 15 10:23:56 2025 +0200
+
+    tracking large files
+
+[33mcommit a2431f15051e851e6176df5e56e92ae1a939ac46[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Fri Aug 15 08:24:25 2025 +0200
+
+    Refactor chat API to build chat history using structured messages
+
+[33mcommit 175f1d5ac3959fb7e39a08ff63d9b59e01259018[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Fri Aug 15 08:06:15 2025 +0200
+
+    Add LangChain dependencies and create chat API route
+
+[33mcommit d3561099838418daf35d25776c981440a8f41827[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Fri Aug 15 01:45:29 2025 +0200
+
+    ......
+
+[33mcommit 4afed529e497fb942ae3373498e7efc425cf055b[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Thu Aug 14 22:12:21 2025 +0200
+
+    My changes
+
+[33mcommit b289c9791ad6583dab9453e48a51ad54a11ca71e[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Thu Aug 14 06:10:10 2025 +0200
+
+    deubbing and merging
+
+[33mcommit d3489cd83f2042571ef1839a01f84668fcfb5d97[m
+Merge: f5355c5 478550a
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Thu Aug 14 01:18:49 2025 +0200
+
+    Resolve merge conflict in sos-button.tsx
+
+[33mcommit f5355c5d2e951520766b8941e0fc5acaef81cb94[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Thu Aug 14 00:15:58 2025 +0200
+
+    merging
+
+[33mcommit 20c21bf9914554718613e323583b13ea27914f15[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Thu Aug 14 00:05:35 2025 +0200
+
+    debugging and merging
+
+[33mcommit 478550af281c7f8cd6d09495cc1f11074e575c65[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Wed Aug 13 14:44:39 2025 +0100
+
+    implement sos flow , waiting for AI result
+
+[33mcommit 99b341f3beaa871b0e41506a6628acbf08c6d891[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Fri Aug 8 13:47:53 2025 +0100
+
+    fix prisma error at build
+
+[33mcommit a564eebff5df6f2af15a4531758a4f2fabc7bdc2[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Fri Aug 8 13:19:53 2025 +0100
+
+    fix map error at build
+
+[33mcommit e57556d0b760e6ec7ec32120cd51b854c735e7da[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Fri Aug 8 12:27:12 2025 +0100
+
+    integrate backend chats
+
+[33mcommit 760499fdbdaabb1bdf4cd7df0246bd1353bec40d[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Sun Aug 3 17:33:39 2025 +0100
+
+    integrate backend contact page
+
+[33mcommit 3814ac65b0a96d0f4a6abc22786ed1928a330329[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Sun Aug 3 05:58:18 2025 +0100
+
+    integrate backend for users page
+
+[33mcommit 77ee97120aaac17b309a92b51da1c99dbcd76d0a[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Sun Aug 3 04:25:10 2025 +0100
+
+    implement chats page clients
+
+[33mcommit 3cbc78947cd7f3e5eb16fbab559b169f86a197f9[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Sat Aug 2 00:27:50 2025 +0100
+
+    maps and users pages
+
+[33mcommit 6b1044e6b027443578b3695209d1a8aef17c8598[m
+Merge: a382d2c a92fdc3
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Fri Aug 1 16:32:43 2025 +0100
+
+    Merge branch 'main' of github.com:Precious-Chinaza/futo-guard
+
+[33mcommit a382d2c7e6b081b06771366ce87b500579bbd335[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Wed Jul 30 13:37:54 2025 +0100
+
+    implement profile edits
+
+[33mcommit 0fffa1945a353724ea2d5df3bc731648eba80473[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Tue Jul 29 17:28:32 2025 +0100
+
+    serious changes made
+
+[33mcommit a92fdc347c2a70d86f860582b52e31eaf03477d4[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Sat Jul 19 12:43:12 2025 +0200
+
+    updated files
+
+[33mcommit 4778d3f731013e589dc46cbc7a37851a0e58384f[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Sat Jul 19 09:39:33 2025 +0100
+
+    fix build errors
+
+[33mcommit f7aed67fff87df86448c3976318ff032995d1403[m
+Merge: 9ac1aed ec7bd79
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Fri Jul 18 07:23:58 2025 +0100
+
+    Merge branch 'main' of github.com:Precious-Chinaza/futo-guard
+
+[33mcommit 9ac1aed19b4d47a0a33f2654c2568e1a14b9d781[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Fri Jul 18 07:18:01 2025 +0100
+
+    mocked up data
+
+[33mcommit ec7bd79656724380e7da799c24ac43fb27ad399e[m
+Author: Precious Chinaza <chinazaekpereprecious813@gmail.com>
+Date:   Fri Jul 18 07:10:15 2025 +0100
+
+    integrated AI and Blockchain technology
+
+[33mcommit 84df13fa6da831c922102e8478dc8e26f72d64e1[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Wed Jul 16 00:35:09 2025 +0100
+
+    tried to fix auth errors
+
+[33mcommit 0781eea4513e2c7c91c3795807f124f702fe58e1[m
+Author: Emmanuel-xt <fattmane5@gmail.com>
+Date:   Tue Jul 15 23:55:48 2025 +0100
+
+    implement authentication
+
+[33mcommit ecb0a8e02273108a6083ce8a63b715cf98f10aa8[m
+Author: Precious Chinaza <116000008+Precious-Chinaza@users.noreply.github.com>
+Date:   Mon Jul 14 07:11:04 2025 +0100
+
+    Initial commit

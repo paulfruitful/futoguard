@@ -22,11 +22,28 @@ export async function POST(req: Request) {
     const result = await client.predict("/predict", {
       file_path: blob
     });
+    
+        const headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        };
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(result, { status: 200, headers });
 
   } catch (error: any) {
     console.error("Gradio API Error:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   } 
+}
+
+
+export async function OPTIONS() {
+    const headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    };
+
+    return NextResponse.json({ success: true }, { status: 200, headers });
 }
