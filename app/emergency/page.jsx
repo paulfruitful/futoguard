@@ -58,19 +58,20 @@ setTimeout(async () => {
     });
 
     const classification = await res.json();
-    setClassificationState(classification);
-
+    
     // Step 2: Send to emergency endpoint
     const emergencyRes = await fetch("/api/emergency", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        classification,
+        classification:classification.data[0].clipwise_results,
         location,
       }),
     });
     const emergencyData = await emergencyRes.json();
     setEmergencyDescription(emergencyData.description);
+    setClassificationState(classification.data[0].clipwise_results[0]);
+
 
     setIsSending(false);
   };
@@ -98,7 +99,7 @@ setTimeout(async () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-200 flex flex-col items-center justify-center p-6">
+    <div className="min-h-[140vh] bg-gradient-to-br from-orange-50 to-orange-200 flex flex-col items-center justify-center p-6">
       {/* Emergency Button */}
       <motion.button
         onClick={handleSOS}
