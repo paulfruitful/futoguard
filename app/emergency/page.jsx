@@ -341,7 +341,6 @@ import ReactMarkdown from "react-markdown";
   ))}
 </div>
 
-            </div>
 
             {/* Chat Input */}
             <div className="border-t-2 border-orange-300 p-5 bg-orange-100">
@@ -351,7 +350,7 @@ import ReactMarkdown from "react-markdown";
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Enhanced Chat Input Component
