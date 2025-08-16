@@ -3,6 +3,17 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 
+import ReactMarkdown from "react-markdown";
+
+
+ function BotMessage({ content }) {
+  return (
+    <div className="p-3 rounded-xl bg-gray-100 text-gray-900">
+      <ReactMarkdown>{content}</ReactMarkdown>
+    </div>
+  );
+}
+
 export default function EmergencySOS() {
   const [classificationState, setClassificationState] = useState(null);
   const [emergencyDescription, setEmergencyDescription] = useState(null);
@@ -295,32 +306,41 @@ setTimeout(async () => {
                 </div>
               </div>
             </div>
+import ReactMarkdown from "react-markdown";
 
-            {/* Chat Messages */}
-            <div className="h-64 overflow-y-auto p-5 space-y-3 bg-orange-50">
-              {chatMessages.length === 0 && (
-                <div className="text-center text-orange-400 py-8 text-sm font-semibold">
-                  Secure communication channel ready...
-                </div>
-              )}
-              {chatMessages.map((m, idx) => (
-                <motion.div 
-                  key={idx} 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${m.role === "human" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`px-4 py-3 rounded-xl max-w-[80%] text-sm shadow-lg font-medium ${
-                      m.role === "human" 
-                        ? "bg-orange-500 text-white rounded-br-md border border-orange-400" 
-                        : "bg-white text-orange-900 rounded-bl-md border-2 border-orange-200"
-                    }`}
-                  >
-                    {m.text}
-                  </div>
-                </motion.div>
-              ))}
+// ...
+
+{/* Chat Messages */}
+<div className="h-64 overflow-y-auto p-5 space-y-3 bg-orange-50">
+  {chatMessages.length === 0 && (
+    <div className="text-center text-orange-400 py-8 text-sm font-semibold">
+      Secure communication channel ready...
+    </div>
+  )}
+  {chatMessages.map((m, idx) => (
+    <motion.div 
+      key={idx} 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`flex ${m.role === "human" ? "justify-end" : "justify-start"}`}
+    >
+      <div
+        className={`px-4 py-3 rounded-xl max-w-[80%] text-sm shadow-lg font-medium ${
+          m.role === "human" 
+            ? "bg-orange-500 text-white rounded-br-md border border-orange-400" 
+            : "bg-white text-orange-900 rounded-bl-md border-2 border-orange-200"
+        }`}
+      >
+        {m.role === "human" ? (
+          m.text
+        ) : (
+          <ReactMarkdown>{m.text}</ReactMarkdown>
+        )}
+      </div>
+    </motion.div>
+  ))}
+</div>
+
             </div>
 
             {/* Chat Input */}
