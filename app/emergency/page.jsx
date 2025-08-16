@@ -125,13 +125,13 @@ setTimeout(async () => {
           <p className="mt-3 text-sm text-gray-700 flex-col flex">
             <strong>Threat Classification:</strong>
             <ul>
-              <li>Label: {classificationState.label}</li>
-              <li>Score: {classificationState.score}</li>
+              <li className="font-bold">Label: {classificationState.label}</li>
+              <li className="font-bold">Score: {classificationState.score}</li>
             </ul>
           </p>
           {emergencyDescription && (
             <p className="mt-2 text-sm text-gray-700">
-              <strong>Emergency:</strong> {emergencyDescription}
+              <strong>Emergency Report:</strong> {emergencyDescription}
             </p>
           )}
           {location && (
