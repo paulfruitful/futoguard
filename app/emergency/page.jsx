@@ -99,95 +99,272 @@ setTimeout(async () => {
   };
 
   return (
-    <div className="min-h-[160vh] bg-gradient-to-br from-orange-50 to-orange-200 flex flex-col items-center justify-center p-6">
-      {/* Emergency Button */}
-      <motion.button
-        onClick={handleSOS}
-        disabled={isSending}
-        whileTap={{ scale: 0.9 }}
-        animate={{ scale: [1, 1.05, 1] }}
-        transition={{ repeat: Infinity, duration: 1.5 }}
-        className="w-56 h-56 rounded-full bg-red-600 text-white font-bold text-2xl shadow-2xl hover:bg-red-700 disabled:opacity-50 flex items-center justify-center"
-      >
-        {isSending ? "Sending SOS..." : "Start An SOS"}
-      </motion.button>
+    <div className="min-h-screen grid self-center place-content-center items-center justify-center bg-orange-100 relative ">
+      {/* Security Grid Background */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-orange-200 animate-pulse"></div>
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(255,165,0,0.15) 1px, transparent 1px),
+            linear-gradient(rgba(255,165,0,0.15) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}></div>
+      </div>
 
-      {/* Emergency Display */}
-      {classificationState && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-8 p-6 w-full max-w-lg rounded-2xl shadow-xl bg-white border border-orange-300"
-        >
-          <h2 className="text-xl font-bold text-orange-700 flex items-center gap-2">
-            🚨 Emergency Alert Sent
-          </h2>
-          <p className="mt-3 text-sm text-gray-700 flex-col flex">
-            <strong>Threat Classification:</strong>
-            <ul>
-              <li className="font-bold">Label: {classificationState.label}</li>
-              <li className="font-bold">Score: {classificationState.score}</li>
-            </ul>
-          </p>
-          {emergencyDescription && (
-            <p className="mt-2 text-sm text-gray-700">
-              <strong>Emergency Report:</strong> {emergencyDescription}
-            </p>
-          )}
-          {location && (
-            <p className="mt-2 text-sm text-gray-700">
-              <strong>Location:</strong> {location.lat}, {location.lng}
-            </p>
-          )}
-        </motion.div>
-      )}
-
-      {/* Chat Session */}
-      <div className="mt-10 w-full max-w-lg bg-white rounded-2xl shadow-lg border border-orange-200 flex flex-col">
-        <h3 className="px-4 py-3 text-lg font-semibold text-white bg-orange-500 rounded-t-2xl">
-          Chat with Agent
-        </h3>
-        <div className="mt-2 h-72 overflow-y-auto px-4 py-2 space-y-2 bg-orange-50">
-          {chatMessages.map((m, idx) => (
-            <div key={idx} className={`flex ${m.role === "human" ? "justify-end" : "justify-start"}`}>
-              <span
-                className={`px-4 py-2 rounded-2xl max-w-[70%] text-sm shadow ${m.role === "human" ? "bg-orange-500 text-white rounded-br-none" : "bg-gray-200 text-gray-800 rounded-bl-none"}`}
-              >
-                {m.text}
-              </span>
-            </div>
-          ))}
+      {/* Header */}
+      <div className="relative z-10 pt-8 pb-4 text-center">
+        <div className="inline-flex items-center gap-3 px-8 py-4 bg-orange-500 rounded-full border-2 border-orange-400 shadow-2xl">
+          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+          <span className="text-white font-bold text-lg tracking-wider">EMERGENCY SECURITY SYSTEM</span>
+          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
         </div>
-        <div className="border-t border-orange-200 p-3">
-          <ChatInput onSend={sendChatMessage} />
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center justify-center px-6 py-8">
+        {/* Emergency Button Section */}
+        <div className="relative mb-12">
+          {/* Outer Ring Animation */}
+          <motion.div
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.4, 0.7, 0.4]
+            }}
+            transition={{ 
+              repeat: Infinity, 
+              duration: 2,
+              ease: "easeInOut"
+            }}
+            className="absolute inset-0 w-72 h-72 rounded-full border-4 border-red-400 -translate-x-8 -translate-y-8"
+          ></motion.div>
+
+          {/* Middle Ring */}
+          <motion.div
+            animate={{ 
+              scale: [1, 1.15, 1],
+              opacity: [0.5, 0.8, 0.5]
+            }}
+            transition={{ 
+              repeat: Infinity, 
+              duration: 1.5,
+              ease: "easeInOut",
+              delay: 0.2
+            }}
+            className="absolute inset-0 w-64 h-64 rounded-full border-3 border-orange-400 -translate-x-4 -translate-y-4"
+          ></motion.div>
+
+          {/* Emergency Button */}
+          <motion.button
+            onClick={handleSOS}
+            disabled={isSending}
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            className="relative w-56 h-56 rounded-full bg-red-600 text-white font-bold text-xl shadow-2xl border-4 border-red-400 disabled:opacity-70 flex flex-col items-center justify-center group overflow-hidden"
+          >
+            {/* Button Glow Effect */}
+            <div className="absolute inset-0 bg-red-500 rounded-full opacity-0 group-hover:opacity-20 transition-all duration-300"></div>
+            
+            {/* Button Content */}
+            <div className="relative z-10 flex flex-col items-center gap-2">
+              {isSending ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    className="w-8 h-8 border-3 border-white border-t-transparent rounded-full"
+                  ></motion.div>
+                  <span className="text-lg font-black">SENDING SOS...</span>
+                </>
+              ) : (
+                <>
+                  <div className="text-3xl mb-1">⚠️</div>
+                  <span className="text-xl font-black tracking-wider">EMERGENCY</span>
+                  <span className="text-sm opacity-90 font-semibold">PRESS & HOLD</span>
+                </>
+              )}
+            </div>
+          </motion.button>
+        </div>
+
+        {/* Emergency Alert Display */}
+        {classificationState && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="w-full max-w-2xl mb-8"
+          >
+            <div className="bg-white border-2 border-orange-300 rounded-2xl shadow-2xl overflow-hidden">
+              {/* Alert Header */}
+              <div className="bg-red-600 px-6 py-5 border-b-2 border-red-500">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+                  <h2 className="text-xl font-black text-white tracking-wide">
+                    🚨 EMERGENCY ALERT DISPATCHED
+                  </h2>
+                  <div className="ml-auto text-xs bg-red-500 text-white px-3 py-2 rounded-full font-bold border border-white">
+                    STATUS: ACTIVE
+                  </div>
+                </div>
+              </div>
+
+              {/* Alert Content */}
+              <div className="p-6 space-y-6 bg-orange-50">
+                {/* Threat Analysis */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-xl p-5 border-2 border-orange-200 shadow-lg">
+                    <h3 className="text-orange-600 font-black mb-4 text-sm tracking-wider uppercase border-b-2 border-orange-200 pb-2">
+                      Threat Analysis
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-orange-800 font-semibold text-sm">Threat Label:</span>
+                        <span className="text-red-600 font-black text-sm px-3 py-2 bg-red-100 rounded-lg border border-red-200">
+                          {classificationState.label}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-orange-800 font-semibold text-sm">Threat Confidence Score:</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-20 h-3 bg-orange-100 rounded-full overflow-hidden border border-orange-200">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${classificationState.score * 100}%` }}
+                              transition={{ duration: 1, ease: "easeOut" }}
+                              className="h-full bg-orange-500 rounded-full"
+                            ></motion.div>
+                          </div>
+                          <span className="text-red-600 font-black text-sm">
+                            {Math.round(classificationState.score * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Location Data */}
+                  {location && (
+                    <div className="bg-white rounded-xl p-5 border-2 border-orange-200 shadow-lg">
+                      <h3 className="text-orange-600 font-black mb-4 text-sm tracking-wider uppercase border-b-2 border-orange-200 pb-2">
+                        Location Data
+                      </h3>
+                      <div className="space-y-3 font-mono text-sm">
+                        <div className="text-orange-800 font-semibold">
+                          LAT: <span className="text-red-600 font-black">{location.lat.toFixed(6)}</span>
+                        </div>
+                        <div className="text-orange-800 font-semibold">
+                          LNG: <span className="text-red-600 font-black">{location.lng.toFixed(6)}</span>
+                        </div>
+                        <div className="text-green-600 text-xs mt-3 flex items-center gap-2 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="font-bold">GPS LOCK ACQUIRED</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Emergency Report */}
+                {emergencyDescription && (
+                  <div className="bg-orange-200 rounded-xl p-5 border-2 border-orange-300 shadow-lg">
+                    <h3 className="text-orange-800 font-black mb-4 text-sm tracking-wider uppercase border-b-2 border-orange-400 pb-2">
+                      Emergency Report
+                    </h3>
+                    <p className="text-orange-900 text-sm leading-relaxed font-medium">
+                      {emergencyDescription}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Chat Interface */}
+        <div className="w-full max-w-2xl">
+          <div className="bg-white border-2 border-orange-300 rounded-2xl shadow-2xl overflow-hidden">
+            {/* Chat Header */}
+            <div className="bg-orange-500 px-6 py-5 border-b-2 border-orange-400">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse border border-white"></div>
+                <h3 className="text-lg font-black text-white tracking-wide">
+                  SECURE AGENT COMMUNICATION
+                </h3>
+                <div className="ml-auto text-xs bg-orange-400 text-white px-3 py-2 rounded-full font-bold border border-white">
+                  ENCRYPTED
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="h-64 overflow-y-auto p-5 space-y-3 bg-orange-50">
+              {chatMessages.length === 0 && (
+                <div className="text-center text-orange-400 py-8 text-sm font-semibold">
+                  Secure communication channel ready...
+                </div>
+              )}
+              {chatMessages.map((m, idx) => (
+                <motion.div 
+                  key={idx} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${m.role === "human" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`px-4 py-3 rounded-xl max-w-[80%] text-sm shadow-lg font-medium ${
+                      m.role === "human" 
+                        ? "bg-orange-500 text-white rounded-br-md border border-orange-400" 
+                        : "bg-white text-orange-900 rounded-bl-md border-2 border-orange-200"
+                    }`}
+                  >
+                    {m.text}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Chat Input */}
+            <div className="border-t-2 border-orange-300 p-5 bg-orange-100">
+              <ChatInput onSend={sendChatMessage} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Separate Chat Input Component
+// Enhanced Chat Input Component
 function ChatInput({ onSend }) {
   const [input, setInput] = useState("");
 
   const handleSubmit = (e) => {
-    e.preventDefault();
     if (!input.trim()) return;
     onSend(input);
     setInput("");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className="flex gap-3">
       <input
-        className="flex-1 border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none"
+        className="flex-1 bg-white border-2 border-orange-300 rounded-xl px-4 py-3 text-sm text-orange-900 placeholder-orange-400 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 focus:outline-none shadow-lg font-medium"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Type your message..."
+        placeholder="Enter secure message..."
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSubmit(e);
+          }
+        }}
       />
-      <button className="bg-orange-500 text-white px-5 py-2 rounded-xl shadow hover:bg-orange-600">
-        Send
-      </button>
-    </form>
+      <motion.button 
+        whileTap={{ scale: 0.95 }}
+        onClick={handleSubmit}
+        className="bg-orange-500 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-orange-400 transition-all duration-200 font-black text-sm tracking-wide border border-orange-400"
+      >
+        SEND
+      </motion.button>
+    </div>
   );
 }

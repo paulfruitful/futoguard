@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { blockchainService } from "@/lib/blockchain"
+import { getBlockchainService } from "@/lib/blockchain"
 import { auth } from "@/auth"
+import { ethers } from "ethers";
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,13 +38,14 @@ export async function POST(request: NextRequest) {
       console.log(`Sending alert ${alert.id} to Lisk Sepolia blockchain...`)
       
       // Only send the essential metadata to the blockchain
-      const txHash = await blockchainService.logSOSAlert(
-        alert.id,
+
+      const blockchainService = getBlockchainService();
+      const txHash = await blockchainService.logSOSAlert(  alert.id,
         Date.now(), // Current timestamp
         latitude,
         longitude
-      )
-
+      );
+      
       // Update alert with blockchain transaction ID
       await prisma.alert.update({
         where: { id: alert.id },
